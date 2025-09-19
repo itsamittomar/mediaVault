@@ -3,6 +3,7 @@ export type MediaType = 'image' | 'video' | 'audio' | 'document';
 export interface MediaItem {
   id: string;
   title: string;
+  originalName?: string;
   description?: string;
   type: MediaType;
   url: string;

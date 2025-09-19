@@ -52,6 +52,7 @@ type MediaResponse struct {
 
 type MediaQuery struct {
 	Category string `form:"category"`
+	Type     string `form:"type"`
 	Search   string `form:"search"`
 	Page     int    `form:"page" binding:"min=1"`
 	Limit    int    `form:"limit" binding:"min=1,max=100"`

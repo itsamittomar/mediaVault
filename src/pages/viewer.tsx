@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MediaItem } from '@/types/media';
-import { getMediaItemById } from '@/data/media';
+import { apiService } from '@/services/apiService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,29 +20,87 @@ export default function ViewerPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate API fetch delay
-    setTimeout(() => {
-      if (id) {
-        const item = getMediaItemById(id);
-        if (item) {
-          setMedia(item);
-        }
-      }
-      setIsLoading(false);
-    }, 1000);
-  }, [id]);
+    const fetchMedia = async () => {
+      if (!id) return;
 
-  const handleDelete = () => {
+      setIsLoading(true);
+
+      try {
+        const response = await apiService.getFile(id);
+
+        // Adapt MediaFile to work with existing components
+        const adaptedFile = {
+          ...response,
+          type: response.mimeType.startsWith('image/') ? 'image' :
+                response.mimeType.startsWith('video/') ? 'video' :
+                response.mimeType.startsWith('audio/') ? 'audio' : 'document',
+          favorite: false, // Add default favorite state
+          thumbnailUrl: response.mimeType.startsWith('image/') ? response.url : undefined,
+          userId: 'current-user', // Add required userId property
+          tags: response.tags || [], // Ensure tags is always an array
+        };
+
+        setMedia(adaptedFile as MediaItem);
+      } catch (error) {
+        console.error('Failed to fetch media file:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load media file.',
+          variant: 'destructive',
+        });
+        setMedia(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMedia();
+  }, [id, toast]);
+
+  const handleDownload = async () => {
     if (!media) return;
-    
-    toast({
-      title: 'File deleted',
-      description: `"${media.title}" has been removed.`,
-    });
-    
-    navigate('/dashboard');
+
+    try {
+      const blob = await apiService.downloadFile(media.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = media.originalName || media.title;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Download started',
+        description: `"${media.title}" is being downloaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Download failed',
+        description: 'Failed to download the file. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!media) return;
+
+    try {
+      await apiService.deleteFile(media.id);
+      toast({
+        title: 'File deleted',
+        description: `"${media.title}" has been removed.`,
+      });
+      navigate('/all-files');
+    } catch (error) {
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete the file. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFavoriteToggle = () => {
@@ -203,7 +261,7 @@ export default function ViewerPage() {
                     </>
                   )}
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button variant="outline" className="flex-1" onClick={handleDownload}>
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>

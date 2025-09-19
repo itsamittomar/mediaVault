@@ -3,11 +3,12 @@ import { useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { MediaItem } from '@/types/media';
 import { apiService } from '@/services/apiService';
 import MediaGrid from '@/components/media-grid';
 import MediaTable from '@/components/media-table';
-import { Filter, Grid, List } from 'lucide-react';
+import { Filter, Grid, List, Search, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,11 +20,37 @@ export default function DashboardPage() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
 
   const typeFilter = searchParams.get('type') || 'all';
   const searchQuery = searchParams.get('q') || '';
   const favoriteFilter = searchParams.get('favorite') === 'true';
   const sortBy = searchParams.get('sort') || 'newest';
+
+  // Sync search input with URL parameter
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  // Handle search submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newSearchParams = new URLSearchParams(location.search);
+    if (searchInput.trim()) {
+      newSearchParams.set('q', searchInput.trim());
+    } else {
+      newSearchParams.delete('q');
+    }
+    window.history.pushState({}, '', `${location.pathname}?${newSearchParams.toString()}`);
+  };
+
+  // Handle clearing search
+  const handleClearSearch = () => {
+    setSearchInput('');
+    const newSearchParams = new URLSearchParams(location.search);
+    newSearchParams.delete('q');
+    window.history.pushState({}, '', `${location.pathname}?${newSearchParams.toString()}`);
+  };
 
   useEffect(() => {
     const fetchMediaFiles = async () => {
@@ -31,7 +58,7 @@ export default function DashboardPage() {
 
       try {
         const response = await apiService.listFiles({
-          category: typeFilter !== 'all' ? typeFilter : undefined,
+          type: typeFilter !== 'all' ? typeFilter : undefined,
           search: searchQuery || undefined,
           page: 1,
           limit: 20,
@@ -90,16 +117,17 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">{getPageTitle()}</h1>
-        
+
         <div className="flex items-center gap-2">
           <Select
             value={sortBy}
             onValueChange={(value) => {
-              searchParams.set('sort', value);
+              const newSearchParams = new URLSearchParams(location.search);
+              newSearchParams.set('sort', value);
               window.history.pushState(
                 {},
                 '',
-                `${location.pathname}?${searchParams.toString()}`
+                `${location.pathname}?${newSearchParams.toString()}`
               );
             }}
           >
@@ -113,7 +141,7 @@ export default function DashboardPage() {
               <SelectItem value="size">Size</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <div className="border rounded-md p-1">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
@@ -134,6 +162,32 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Search Form */}
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Search files by name, description, or tags..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-10"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <Button type="submit" variant="default">
+          Search
+        </Button>
+      </form>
       
       {searchQuery && (
         <div className="flex items-center gap-2">
@@ -141,10 +195,7 @@ export default function DashboardPage() {
             Search: {searchQuery}
             <button
               className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full"
-              onClick={() => {
-                searchParams.delete('q');
-                window.location.search = searchParams.toString();
-              }}
+              onClick={handleClearSearch}
             >
               ×
             </button>

@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { MediaItem } from '@/types/media';
 import { apiService } from '@/services/apiService';
 import MediaGrid from '@/components/media-grid';
 import MediaTable from '@/components/media-table';
-import { Filter, Grid, List, RefreshCw } from 'lucide-react';
+import { Filter, Grid, List, RefreshCw, Search, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,13 +19,16 @@ export default function AllFilesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAllFiles = async () => {
     setIsLoading(true);
 
     try {
       const response = await apiService.listFiles({
-        category: typeFilter !== 'all' ? typeFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchQuery || undefined,
         page: 1,
         limit: 100, // Get more files for the all files view
       });
@@ -61,9 +65,21 @@ export default function AllFilesPage() {
     }
   };
 
+  // Handle search submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchInput.trim());
+  };
+
+  // Handle clearing search
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearchQuery('');
+  };
+
   useEffect(() => {
     fetchAllFiles();
-  }, [typeFilter, sortBy]);
+  }, [typeFilter, sortBy, searchQuery]);
 
   const handleRefresh = () => {
     fetchAllFiles();
@@ -168,6 +184,48 @@ export default function AllFilesPage() {
         </div>
       </div>
 
+      {/* Search Form */}
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Search files by name, description, or tags..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-10"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <Button type="submit" variant="default">
+          Search
+        </Button>
+      </form>
+
+      {/* Active Search Query Display */}
+      {searchQuery && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="px-3 py-1 text-sm">
+            Search: {searchQuery}
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full"
+            >
+              ×
+            </button>
+          </Badge>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
@@ -215,7 +273,11 @@ export default function AllFilesPage() {
               </div>
               <h3 className="text-2xl font-semibold mb-2">No files found</h3>
               <p className="text-muted-foreground max-w-md">
-                No files have been uploaded yet. Upload some media to get started.
+                {searchQuery
+                  ? `No results found for "${searchQuery}". Try a different search term or clear the search.`
+                  : typeFilter !== 'all'
+                  ? `No ${typeFilter} files found. Try a different file type or upload some media.`
+                  : 'No files have been uploaded yet. Upload some media to get started.'}
               </p>
             </div>
           ) : viewMode === 'grid' ? (

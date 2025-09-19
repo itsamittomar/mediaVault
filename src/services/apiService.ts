@@ -58,6 +58,7 @@ export interface UpdateRequest {
 
 export interface ListQuery {
   category?: string;
+  type?: string;
   search?: string;
   page?: number;
   limit?: number;
@@ -157,6 +158,7 @@ class ApiService {
     const params = new URLSearchParams();
 
     if (query.category) params.append('category', query.category);
+    if (query.type) params.append('type', query.type);
     if (query.search) params.append('search', query.search);
     if (query.page) params.append('page', query.page.toString());
     if (query.limit) params.append('limit', query.limit.toString());

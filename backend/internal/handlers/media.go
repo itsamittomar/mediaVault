@@ -118,6 +118,7 @@ func (h *MediaHandler) ListFiles(c *gin.Context) {
 
 	// Parse query parameters manually to avoid strict validation
 	query.Category = c.Query("category")
+	query.Type = c.Query("type")
 	query.Search = c.Query("search")
 
 	// Parse page with default

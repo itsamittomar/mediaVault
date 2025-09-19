@@ -167,6 +167,20 @@ func (ds *DatabaseService) ListMediaFiles(ctx context.Context, query models.Medi
 		filter["category"] = query.Category
 	}
 
+	// Apply type filter based on mimeType
+	if query.Type != "" {
+		switch query.Type {
+		case "image":
+			filter["mimeType"] = bson.M{"$regex": "^image/", "$options": "i"}
+		case "video":
+			filter["mimeType"] = bson.M{"$regex": "^video/", "$options": "i"}
+		case "audio":
+			filter["mimeType"] = bson.M{"$regex": "^audio/", "$options": "i"}
+		case "document":
+			filter["mimeType"] = bson.M{"$not": bson.M{"$regex": "^(image|video|audio)/", "$options": "i"}}
+		}
+	}
+
 	// Apply search filter
 	if query.Search != "" {
 		filter["$or"] = []bson.M{
