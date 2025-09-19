@@ -65,6 +65,18 @@ func main() {
 		api.GET("/categories", mediaHandler.GetCategories)
 	}
 
+	// Serve static files for production deployment
+	router.Static("/static", "./static")
+	router.NoRoute(func(c *gin.Context) {
+		// Check if the request is for an API endpoint
+		if gin.Mode() == gin.ReleaseMode && !gin.IsDebugging() {
+			// Serve index.html for all non-API routes (SPA support)
+			c.File("./static/index.html")
+		} else {
+			c.JSON(404, gin.H{"error": "Route not found"})
+		}
+	})
+
 	// Start server
 	log.Printf("Starting server on port %s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {
