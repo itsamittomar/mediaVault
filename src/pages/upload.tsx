@@ -15,6 +15,7 @@ import { Upload, File, X, FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatFileSize } from '@/lib/utils';
 import { getCategories } from '@/data/media';
+import { apiService } from '@/services/apiService';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ACCEPTED_FILE_TYPES = {
@@ -98,37 +99,51 @@ export default function UploadPage() {
     }
 
     setIsUploading(true);
-    
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 200);
+    setUploadProgress(0);
 
-    // Simulate upload delay
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadProgress(100);
-      
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Prepare metadata
+        const metadata = {
+          title: data.title || file.name.split('.').slice(0, -1).join('.'),
+          description: data.description || undefined,
+          category: data.category || undefined,
+          tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : undefined,
+        };
+
+        // Upload file
+        await apiService.uploadFile(file, metadata);
+
+        // Update progress
+        const progress = ((i + 1) / files.length) * 100;
+        setUploadProgress(progress);
+      }
+
       toast({
         title: 'Upload successful',
         description: `${files.length > 1 ? `${files.length} files` : files[0].name} uploaded successfully`,
       });
-      
-      setIsUploading(false);
-      setUploadProgress(0);
+
       setFiles([]);
       form.reset();
-      
+
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
-    }, 3000);
+
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast({
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   const removeFile = (index: number) => {

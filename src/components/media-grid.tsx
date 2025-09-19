@@ -42,10 +42,10 @@ export default function MediaGrid({ items }: MediaGridProps) {
     if (item.thumbnailUrl) {
       return item.thumbnailUrl;
     }
-    
+
     return item.type === 'image' ? item.url : undefined;
   };
-  
+
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'document':
@@ -101,7 +101,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
                   <span className="sr-only">Favorite</span>
                 </Badge>
               )}
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 backdrop-blur-sm">
@@ -109,7 +109,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={() => handleFavoriteToggle(item.id, item.favorite)}
                   >

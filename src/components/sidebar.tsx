@@ -22,7 +22,7 @@ export default function Sidebar() {
     },
     {
       title: 'All Files',
-      href: '/dashboard?type=all',
+      href: '/all-files',
       icon: FolderOpen,
     },
     {

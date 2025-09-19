@@ -2,60 +2,75 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { MediaItem } from '@/types/media';
-import { getMediaItems } from '@/data/media';
-import { useAuth } from '@/contexts/auth-context';
+import { apiService } from '@/services/apiService';
 import MediaGrid from '@/components/media-grid';
 import MediaTable from '@/components/media-table';
 import { Filter, Grid, List } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const { user } = useAuth();
-  
+  const { toast } = useToast();
+
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const typeFilter = searchParams.get('type') || 'all';
   const searchQuery = searchParams.get('q') || '';
   const favoriteFilter = searchParams.get('favorite') === 'true';
   const sortBy = searchParams.get('sort') || 'newest';
 
   useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate API fetch delay
-    setTimeout(() => {
-      const items = getMediaItems({
-        type: typeFilter !== 'all' ? typeFilter : undefined,
-        search: searchQuery || undefined,
-        favorite: searchParams.has('favorite') ? favoriteFilter : undefined,
-        userId: user?.id,
-      });
-      
-      // Sort items
-      const sortedItems = [...items].sort((a, b) => {
-        if (sortBy === 'newest') {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        } else if (sortBy === 'oldest') {
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        } else if (sortBy === 'name') {
-          return a.title.localeCompare(b.title);
-        } else if (sortBy === 'size') {
-          return b.size - a.size;
+    const fetchMediaFiles = async () => {
+      setIsLoading(true);
+
+      try {
+        const response = await apiService.listFiles({
+          category: typeFilter !== 'all' ? typeFilter : undefined,
+          search: searchQuery || undefined,
+          page: 1,
+          limit: 20,
+        });
+
+        // Check if response and files array exists
+        if (!response || !response.files || !Array.isArray(response.files)) {
+          setMediaItems([]);
+          return;
         }
-        return 0;
-      });
-      
-      setMediaItems(sortedItems);
-      setIsLoading(false);
-    }, 500);
-  }, [typeFilter, searchQuery, favoriteFilter, sortBy, user?.id]);
+
+        // Adapt MediaFile to work with existing components
+        const adaptedFiles = response.files.map((file) => ({
+          ...file,
+          type: file.mimeType.startsWith('image/') ? 'image' :
+                file.mimeType.startsWith('video/') ? 'video' :
+                file.mimeType.startsWith('audio/') ? 'audio' : 'document',
+          favorite: false, // Add default favorite state
+          thumbnailUrl: file.mimeType.startsWith('image/') ? file.url : undefined,
+          userId: 'current-user', // Add required userId property
+          tags: file.tags || [], // Ensure tags is always an array
+        }));
+
+        setMediaItems(adaptedFiles as MediaItem[]);
+      } catch (error) {
+        console.error('Failed to fetch media files:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load media files. Please try again.',
+          variant: 'destructive',
+        });
+        setMediaItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMediaFiles();
+  }, [typeFilter, searchQuery, favoriteFilter, sortBy, toast]);
 
   // Helper to get title based on filters
   const getPageTitle = () => {
