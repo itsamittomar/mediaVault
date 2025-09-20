@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for MediaVault
+# Multi-stage Dockerfile for MediaVault on Railway
 
 # Stage 1: Build the React frontend
 FROM node:18-alpine AS frontend-build
@@ -6,10 +6,17 @@ WORKDIR /app
 
 # Copy frontend package files
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
-# Copy frontend source
-COPY . .
+# Copy frontend source (exclude backend and node_modules)
+COPY src ./src
+COPY public ./public
+COPY index.html ./
+COPY vite.config.ts ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY tsconfig*.json ./
+COPY components.json ./
 
 # Build the frontend
 RUN npm run build
@@ -43,8 +50,8 @@ COPY --from=backend-build /app/main .
 # Copy the frontend build
 COPY --from=frontend-build /app/dist ./static
 
-# Expose port
-EXPOSE 8080
+# Use Railway's $PORT environment variable
+EXPOSE $PORT
 
 # Run the application
 CMD ["./main"]
