@@ -183,25 +183,24 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 
 	// Temporarily disable metadata to test signature issue
 	log.Printf("Uploading without metadata to test signature issue...")
-	log.Printf("File size: %d bytes, Content-Type: %s", file.Size, file.Header.
+	log.Printf("File size: %d bytes, Content-Type: %s", file.Size, file.Header.Get("Content-Type"))
+
 	// if len(minioMetadata) > 0 {
 	// 	putOptions.UserMetadata = minioMetadata
 	// }
 
-	_, err = ms.Client.PutObject(
 	uploadInfo, err := ms.Client.PutObject(
+		ctx,
 		ms.BucketName,
 		fileName,
 		src,
 		file.Size,
 		putOptions,
 	)
-	if err != nil {
-log.Printf("Upload successful! UploadID: %s, Size: %d", uploadInfo.UploadID, uploadInfo.Size)
-	}
-	if err != nil {
-		log.Printf("MinIO upload failed: %v", err)
-		return nil
+
+	if err == nil {
+		log.Printf("Upload successful! ETag: %s, Size: %d", uploadInfo.ETag, uploadInfo.Size)
+	} else {
 		log.Printf("MinIO upload failed: %v", err)
 		return nil, fmt.Errorf("failed to upload file to MinIO: %w", err)
 	}
