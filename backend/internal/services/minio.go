@@ -21,12 +21,14 @@ import (
 type MinioService struct {
 	client     *minio.Client
 	bucketName string
+	region     string
 }
 
 func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	client, err := minio.New(cfg.MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
 		Secure: cfg.MinioUseSSL,
+		Region: cfg.MinioRegion,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MinIO client: %w", err)
@@ -35,6 +37,7 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	service := &MinioService{
 		client:     client,
 		bucketName: cfg.MinioBucketName,
+		region:     cfg.MinioRegion,
 	}
 
 	// Ensure bucket exists
@@ -54,7 +57,7 @@ func (ms *MinioService) ensureBucketExists() error {
 	}
 
 	if !exists {
-		err = ms.client.MakeBucket(ctx, ms.bucketName, minio.MakeBucketOptions{Region: "us-east-1"})
+		err = ms.client.MakeBucket(ctx, ms.bucketName, minio.MakeBucketOptions{Region: ms.region})
 		if err != nil {
 			return fmt.Errorf("failed to create bucket: %w", err)
 		}

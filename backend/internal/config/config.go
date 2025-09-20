@@ -15,6 +15,7 @@ type Config struct {
 	MinioAccessKey  string
 	MinioSecretKey  string
 	MinioUseSSL     bool
+	MinioRegion     string
 	MinioBucketName string
 	MongoURI        string
 	MongoDatabase   string
@@ -36,6 +37,7 @@ func LoadConfig() *Config {
 		MinioAccessKey:  getEnv("MINIO_ACCESS_KEY", "minioadmin"),
 		MinioSecretKey:  getEnv("MINIO_SECRET_KEY", "minioadmin"),
 		MinioUseSSL:     useSSL,
+		MinioRegion:     getEnv("MINIO_REGION", "us-east-1"),
 		MinioBucketName: getEnv("MINIO_BUCKET_NAME", "mediavault"),
 		MongoURI:        getEnv("MONGODB_URI", "mongodb://localhost:27017"),
 		MongoDatabase:   getEnv("MONGODB_DATABASE", "mediavault"),
