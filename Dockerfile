@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy frontend package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
