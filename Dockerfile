@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Clean install for Railway compatibility
-RUN npm ci --omit=dev --cache /tmp/npm-cache
+RUN npm ci --cache /tmp/npm-cache
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
