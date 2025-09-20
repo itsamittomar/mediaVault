@@ -45,9 +45,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 FROM node:18-slim
 WORKDIR /app
 
-# Install ca-certificates for HTTPS requests
+# Install ca-certificates and curl for HTTPS requests and health checks
 RUN apt-get update && \
-    apt-get install -y ca-certificates tzdata && \
+    apt-get install -y ca-certificates tzdata curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the backend binary
@@ -61,3 +61,14 @@ RUN chmod +x ./main
 
 # Use Railway's $PORT environment variable
 EXPOSE 8080
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Set default environment variables for Railway
+ENV GIN_MODE=release
+ENV PORT=8080
+
+# Run the application
+CMD ["./main"]
