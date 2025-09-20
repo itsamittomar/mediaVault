@@ -30,11 +30,13 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	log.Printf("MinIO AccessKey length: %d, SecretKey length: %d",
 		len(cfg.MinioAccessKey), len(cfg.MinioSecretKey))
 
-	// Create MinIO client options for AWS S3
+	// Create MinIO client options specifically for AWS S3
 	opts := &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
 		Secure: cfg.MinioUseSSL,
 		Region: cfg.MinioRegion,
+		// Use virtual-hosted-style for AWS S3 (default behavior)
+		BucketLookup: minio.BucketLookupAuto,
 	}
 
 	client, err := minio.New(cfg.MinioEndpoint, opts)
@@ -139,6 +141,14 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 	}
 	defer src.Close()
 
+	// Ensure we're at the beginning of the file
+	if seeker, ok := src.(io.Seeker); ok {
+		_, err := seeker.Seek(0, io.SeekStart)
+		if err != nil {
+			log.Printf("Warning: Could not seek to beginning of file: %v", err)
+		}
+	}
+
 	// Generate unique filename
 	fileID := uuid.New()
 	ext := filepath.Ext(file.Filename)
@@ -146,28 +156,17 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 
 	log.Printf("Generated filename: %s for bucket: %s", fileName, ms.BucketName)
 
-	// Prepare MinIO metadata (only user metadata, not system headers)
+	// Prepare minimal metadata to avoid signature issues with AWS S3
 	minioMetadata := map[string]string{
-		"X-Amz-Meta-Original": file.Filename,
-		"X-Amz-Meta-Title":    metadata.Title,
+		"original-name": file.Filename,
+		"title":         metadata.Title,
 	}
 
 	if metadata.Description != nil {
-		minioMetadata["X-Amz-Meta-Description"] = *metadata.Description
+		minioMetadata["description"] = *metadata.Description
 	}
 	if metadata.Category != nil {
-		minioMetadata["X-Amz-Meta-Category"] = *metadata.Category
-	}
-	if metadata.Tags != nil && len(metadata.Tags) > 0 {
-		// Convert tags slice to comma-separated string
-		tagsStr := ""
-		for i, tag := range metadata.Tags {
-			if i > 0 {
-				tagsStr += ","
-			}
-			tagsStr += tag
-		}
-		minioMetadata["X-Amz-Meta-Tags"] = tagsStr
+		minioMetadata["category"] = *metadata.Category
 	}
 
 	// Upload to MinIO with timeout
@@ -177,18 +176,32 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	// Try minimal options first to isolate signature issues
+	putOptions := minio.PutObjectOptions{
+		ContentType: file.Header.Get("Content-Type"),
+	}
+
+	// Temporarily disable metadata to test signature issue
+	log.Printf("Uploading without metadata to test signature issue...")
+	log.Printf("File size: %d bytes, Content-Type: %s", file.Size, file.Header.
+	// if len(minioMetadata) > 0 {
+	// 	putOptions.UserMetadata = minioMetadata
+	// }
+
 	_, err = ms.Client.PutObject(
-		ctx,
+	uploadInfo, err := ms.Client.PutObject(
 		ms.BucketName,
 		fileName,
 		src,
 		file.Size,
-		minio.PutObjectOptions{
-			ContentType:  file.Header.Get("Content-Type"),
-			UserMetadata: minioMetadata,
-		},
+		putOptions,
 	)
 	if err != nil {
+log.Printf("Upload successful! UploadID: %s, Size: %d", uploadInfo.UploadID, uploadInfo.Size)
+	}
+	if err != nil {
+		log.Printf("MinIO upload failed: %v", err)
+		return nil
 		log.Printf("MinIO upload failed: %v", err)
 		return nil, fmt.Errorf("failed to upload file to MinIO: %w", err)
 	}
