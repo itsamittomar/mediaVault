@@ -11,7 +11,6 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { Camera, Upload, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -49,7 +48,6 @@ export default function SettingsPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast: toastHook } = useToast();
   const { user, uploadAvatar } = useAuth();
   
   const profileForm = useForm<ProfileFormValues>({
@@ -149,8 +147,7 @@ export default function SettingsPage() {
 
     // Simulate API call
     setTimeout(() => {
-      toastHook({
-        title: 'Profile updated',
+      toast.success('Profile updated', {
         description: 'Your profile information has been updated.',
       });
       setIsUpdating(false);
@@ -162,8 +159,7 @@ export default function SettingsPage() {
 
     // Simulate API call
     setTimeout(() => {
-      toastHook({
-        title: 'Password updated',
+      toast.success('Password updated', {
         description: 'Your password has been changed successfully.',
       });
       passwordForm.reset();
