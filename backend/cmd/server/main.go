@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"mediaVault-backend/internal/config"
 	"mediaVault-backend/internal/handlers"
