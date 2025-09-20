@@ -6,7 +6,9 @@ WORKDIR /app
 
 # Copy frontend package files
 COPY package*.json ./
-RUN rm -rf node_modules package-lock.json && npm install
+
+# Clean install for Railway compatibility
+RUN npm ci --omit=dev --cache /tmp/npm-cache
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
