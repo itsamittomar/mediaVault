@@ -7,8 +7,11 @@ WORKDIR /app
 # Copy frontend package files
 COPY package*.json ./
 
-# Clean install and rebuild for compatibility
-RUN npm ci --cache /tmp/npm-cache && npm rebuild
+# Workaround for npm optional dependencies bug
+RUN rm -f package-lock.json && \
+    npm cache clean --force && \
+    npm install --no-optional && \
+    npm install @rollup/rollup-linux-x64-gnu --save-optional
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
