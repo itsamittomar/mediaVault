@@ -42,11 +42,11 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 
 # Stage 3: Production image
-FROM alpine:latest
+FROM debian:bookworm-slim
 WORKDIR /app
 
-# Install essential packages for HTTPS and shell operations
-RUN apk --no-cache add ca-certificates bash
+# Install essential packages for HTTPS
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy the backend binary
 COPY --from=backend-build /app/main .
