@@ -363,8 +363,10 @@ func (h *MediaHandler) HealthCheck(c *gin.Context) {
 
 // TestMinIO endpoint to test MinIO connectivity
 func (h *MediaHandler) TestMinIO(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	// Test bucket listing
-	buckets, err := h.minioService.Client.ListBuckets(c.Request.Context())
+	buckets, err := h.minioService.Client.ListBuckets(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "MinIO connection failed",
@@ -378,9 +380,33 @@ func (h *MediaHandler) TestMinIO(c *gin.Context) {
 		bucketNames[i] = bucket.Name
 	}
 
+	// Test specific bucket access
+	targetBucket := h.minioService.BucketName
+	bucketExists, err := h.minioService.Client.BucketExists(ctx, targetBucket)
+	bucketStatus := "accessible"
+	if err != nil {
+		bucketStatus = "error: " + err.Error()
+	} else if !bucketExists {
+		bucketStatus = "does not exist"
+	}
+
+	// Test bucket location (region)
+	bucketLocation := "unknown"
+	if bucketExists {
+		location, err := h.minioService.Client.GetBucketLocation(ctx, targetBucket)
+		if err != nil {
+			bucketLocation = "error getting location: " + err.Error()
+		} else {
+			bucketLocation = location
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"status":        "MinIO connection successful",
-		"buckets":       bucketNames,
-		"target_bucket": h.minioService.BucketName,
+		"status":          "MinIO connection successful",
+		"buckets":         bucketNames,
+		"target_bucket":   targetBucket,
+		"bucket_exists":   bucketExists,
+		"bucket_status":   bucketStatus,
+		"bucket_location": bucketLocation,
 	})
 }
