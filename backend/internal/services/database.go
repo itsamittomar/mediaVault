@@ -36,105 +36,24 @@ func NewDatabaseService(mongoURI, dbName string) (*DatabaseService, error) {
 	database := client.Database(dbName)
 	collection := database.Collection("media_files")
 
-	service := &DatabaseService{
+	// Create indexes
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "fileName", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err = collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create index: %w", err)
+	}
+
+	return &DatabaseService{
 		client:     client,
 		database:   database,
 		collection: collection,
-	}
-
-	// Create comprehensive indexes for better performance
-	if err := service.createIndexes(ctx); err != nil {
-		return nil, fmt.Errorf("failed to create database indexes: %w", err)
-	}
-
-	return service, nil
-}
-
-// createIndexes creates all necessary database indexes for optimal Go performance
-func (ds *DatabaseService) createIndexes(ctx context.Context) error {
-	// Users collection indexes for authentication
-	usersCollection := ds.database.Collection("users")
-
-	userIndexes := []mongo.IndexModel{
-		{
-			Keys:    bson.D{{Key: "email", Value: 1}},
-			Options: options.Index().SetUnique(true).SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "username", Value: 1}},
-			Options: options.Index().SetUnique(true).SetBackground(true),
-		},
-		{
-			Keys: bson.D{
-				{Key: "email", Value: 1},
-				{Key: "username", Value: 1},
-			},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "createdAt", Value: -1}},
-			Options: options.Index().SetBackground(true),
-		},
-	}
-
-	_, err := usersCollection.Indexes().CreateMany(ctx, userIndexes)
-	if err != nil {
-		return fmt.Errorf("failed to create user indexes: %w", err)
-	}
-
-	// Media files collection indexes for efficient queries
-	mediaIndexes := []mongo.IndexModel{
-		{
-			Keys:    bson.D{{Key: "fileName", Value: 1}},
-			Options: options.Index().SetUnique(true).SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "userId", Value: 1}},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "createdAt", Value: -1}},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys: bson.D{
-				{Key: "userId", Value: 1},
-				{Key: "createdAt", Value: -1},
-			},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "category", Value: 1}},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys:    bson.D{{Key: "mimeType", Value: 1}},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys: bson.D{
-				{Key: "userId", Value: 1},
-				{Key: "category", Value: 1},
-			},
-			Options: options.Index().SetBackground(true),
-		},
-		{
-			Keys: bson.D{
-				{Key: "title", Value: "text"},
-				{Key: "description", Value: "text"},
-				{Key: "originalName", Value: "text"},
-				{Key: "tags", Value: "text"},
-			},
-			Options: options.Index().SetBackground(true),
-		},
-	}
-
-	_, err = ds.collection.Indexes().CreateMany(ctx, mediaIndexes)
-	if err != nil {
-		return fmt.Errorf("failed to create media indexes: %w", err)
-	}
-
-	return nil
+	}, nil
 }
 
 func (ds *DatabaseService) Close() error {

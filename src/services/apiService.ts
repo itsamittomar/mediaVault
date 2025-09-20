@@ -219,55 +219,6 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/health`);
     return response.json();
   }
-
-  // Profile management methods
-  async updateProfile(data: { username?: string; email?: string }): Promise<{ user: any; message: string }> {
-    return this.request<{ user: any; message: string }>('/profile', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
-    return this.request<{ message: string }>('/profile/change-password', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async uploadAvatar(file: File): Promise<{ user: any; avatarURL: string; message: string }> {
-    const formData = new FormData();
-    formData.append('avatar', file);
-
-    const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
-      method: 'POST',
-      headers: {
-        ...this.getAuthHeaders(),
-      },
-      credentials: 'include',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
-
-      try {
-        const errorJson = JSON.parse(errorText);
-        if (errorJson.error) {
-          errorMessage = errorJson.error;
-        }
-      } catch {
-        if (errorText) {
-          errorMessage = errorText;
-        }
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    return response.json();
-  }
 }
 
 export const apiService = new ApiService();
