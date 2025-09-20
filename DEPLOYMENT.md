@@ -1,6 +1,6 @@
 # MediaVault Deployment Guide
 
-This guide covers deploying MediaVault to both Heroku and Vercel platforms.
+This guide covers deploying MediaVault with proper production configuration to avoid localhost hardcoding issues.
 
 ## Architecture Overview
 
@@ -9,6 +9,25 @@ MediaVault consists of:
 - **Backend**: Go Gin API server
 - **Database**: MongoDB
 - **Storage**: MinIO (S3-compatible object storage)
+
+## Production Configuration
+
+### Fixed Localhost Issues
+
+The application is now properly configured to work in production environments:
+
+1. **Frontend API Configuration**: Uses environment-based API URLs:
+   - Development: `http://localhost:8080/api/v1`
+   - Production: `/api/v1` (relative path)
+   - Custom: Set `VITE_API_BASE_URL` environment variable
+
+2. **Backend CORS Configuration**: Automatically handles CORS origins:
+   - Development: Allows localhost origins
+   - Production: Use `CORS_ORIGINS` environment variable
+
+3. **Environment Files Created**:
+   - `.env.production`: Template for production deployments
+   - `.env.heroku`: Heroku-specific configuration
 
 ## Deployment Options
 
