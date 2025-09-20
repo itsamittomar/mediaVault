@@ -1,17 +1,34 @@
 package middleware
 
 import (
+	"os"
+	"strings"
+
+	"github.com/gin-contrib/cors"
+	"github.co
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
-	config := cors.DefaultConfig()
+	// Get CORS origins from environment variable
+	corsOrigins := os.Getenv("CORS_ORIGINS")
 
-	// Allow specific origins in development (can't use AllowAllOrigins with credentials)
-	config.AllowOrigins = []string{
-		"http://localhost:3000",
-		"http://localhost:5173", // Vite dev server
+	if corsOrigins != "" {
+		// Production: use configured origins
+		if corsOrigins == "*" {
+			config.AllowAllOrigins = true
+		} else {
+			config.AllowOrigins = strings.Split(corsOrigins, ",")
+		}
+	} else {
+		// Development: allow localhost origins
+		config.AllowOrigins = []string{
+			"http://localhost:3000",
+			"http://localhost:5173", // Vite dev server
+			"http://127.0.0.1:3000",
+			"http://127.0.0.1:5173",
+		}
 		"http://127.0.0.1:3000",
 		"http://127.0.0.1:5173",
 	}
