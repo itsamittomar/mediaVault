@@ -66,15 +66,19 @@ func main() {
 	}
 
 	// Serve static files for production deployment
-	router.Static("/static", "./static")
+	router.Static("/assets", "./static/assets")         // Serve assets directory
+	router.StaticFile("/vite.svg", "./static/vite.svg") // Serve favicon
 	router.NoRoute(func(c *gin.Context) {
-		// Check if the request is for an API endpoint
+		// Check if the request is for static assets first
+		path := c.Request.URL.Path
 		if gin.Mode() == gin.ReleaseMode && !gin.IsDebugging() {
-			// Serve index.html for all non-API routes (SPA support)
-			c.File("./static/index.html")
-		} else {
-			c.JSON(404, gin.H{"error": "Route not found"})
+			// For SPA support, serve index.html for non-API, non-asset routes
+			if !strings.HasPrefix(path, "/api") && !strings.HasPrefix(path, "/assets") && !strings.Contains(path, ".") {
+				c.File("./static/index.html")
+				return
+			}
 		}
+		c.JSON(404, gin.H{"error": "Route not found"})
 	})
 
 	// Start server
