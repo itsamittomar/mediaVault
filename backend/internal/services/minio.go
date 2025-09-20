@@ -30,15 +30,11 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	log.Printf("MinIO AccessKey length: %d, SecretKey length: %d",
 		len(cfg.MinioAccessKey), len(cfg.MinioSecretKey))
 
-	// Create MinIO client options
+	// Create MinIO client options for AWS S3
 	opts := &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
 		Secure: cfg.MinioUseSSL,
-	}
-
-	// Only set region if not empty - let AWS SDK auto-detect for S3
-	if cfg.MinioRegion != "" {
-		opts.Region = cfg.MinioRegion
+		Region: cfg.MinioRegion,
 	}
 
 	client, err := minio.New(cfg.MinioEndpoint, opts)
@@ -62,6 +58,24 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	}
 	log.Printf("MinIO connection successful. Found %d buckets", len(buckets))
 
+	// Log bucket names for debugging
+	for _, bucket := range buckets {
+		log.Printf("Available bucket: %s (created: %v)", bucket.Name, bucket.CreationDate)
+
+		// Check bucket region if it matches our target bucket
+		if bucket.Name == cfg.MinioBucketName {
+			location, err := client.GetBucketLocation(ctx, bucket.Name)
+			if err != nil {
+				log.Printf("Warning: Could not get location for bucket %s: %v", bucket.Name, err)
+			} else {
+				log.Printf("Bucket %s is in region: %s (configured region: %s)", bucket.Name, location, cfg.MinioRegion)
+				if location != cfg.MinioRegion && location != "" {
+					log.Printf("WARNING: Bucket region mismatch! Bucket is in %s but client configured for %s", location, cfg.MinioRegion)
+				}
+			}
+		}
+	}
+
 	// Ensure bucket exists
 	if err := service.ensureBucketExists(); err != nil {
 		return nil, fmt.Errorf("failed to ensure bucket exists: %w", err)
@@ -75,14 +89,18 @@ func (ms *MinioService) ensureBucketExists() error {
 
 	exists, err := ms.Client.BucketExists(ctx, ms.BucketName)
 	if err != nil {
+		log.Printf("Failed to check if bucket exists: %v", err)
 		return fmt.Errorf("failed to check if bucket exists: %w", err)
 	}
 
 	if !exists {
+		log.Printf("Bucket %s does not exist, attempting to create...", ms.BucketName)
 		err = ms.Client.MakeBucket(ctx, ms.BucketName, minio.MakeBucketOptions{Region: ms.region})
 		if err != nil {
+			log.Printf("Failed to create bucket: %v", err)
 			return fmt.Errorf("failed to create bucket: %w", err)
 		}
+		log.Printf("Bucket %s created successfully", ms.BucketName)
 
 		// Set bucket policy to allow public read access
 		policy := fmt.Sprintf(`{
@@ -100,7 +118,11 @@ func (ms *MinioService) ensureBucketExists() error {
 		err = ms.Client.SetBucketPolicy(ctx, ms.BucketName, policy)
 		if err != nil {
 			log.Printf("Warning: Failed to set bucket policy: %v", err)
+		} else {
+			log.Printf("Bucket policy set successfully for %s", ms.BucketName)
 		}
+	} else {
+		log.Printf("Bucket %s already exists", ms.BucketName)
 	}
 
 	return nil
