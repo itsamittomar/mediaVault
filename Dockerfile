@@ -1,14 +1,14 @@
 # Multi-stage Dockerfile for MediaVault on Railway
 
 # Stage 1: Build the React frontend
-FROM node:18-alpine AS frontend-build
+FROM node:18-slim AS frontend-build
 WORKDIR /app
 
 # Copy frontend package files
 COPY package*.json ./
 
-# Clean install for Railway compatibility
-RUN npm ci --cache /tmp/npm-cache
+# Clean install and rebuild for compatibility
+RUN npm ci --cache /tmp/npm-cache && npm rebuild
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
