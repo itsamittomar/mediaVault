@@ -42,7 +42,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 
 # Stage 3: Production image
-FROM ubuntu:22.04
+FROM node:18-slim
 WORKDIR /app
 
 # Install ca-certificates for HTTPS requests
