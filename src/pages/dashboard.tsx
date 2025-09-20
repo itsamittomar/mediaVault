@@ -87,7 +87,7 @@ export default function DashboardPage() {
         console.error('Failed to fetch media files:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load media files. Please try again.',
+          description: `Failed to load media files: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: 'destructive',
         });
         setMediaItems([]);

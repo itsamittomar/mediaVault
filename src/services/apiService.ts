@@ -67,6 +67,11 @@ export interface ListQuery {
 }
 
 class ApiService {
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('accessToken');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -79,8 +84,10 @@ class ApiService {
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
           ...options.headers,
         },
+        credentials: 'include',
       });
     } catch (error) {
       throw new Error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -128,6 +135,10 @@ class ApiService {
 
     const response = await fetch(`${API_BASE_URL}/media/upload`, {
       method: 'POST',
+      headers: {
+        ...this.getAuthHeaders(),
+      },
+      credentials: 'include',
       body: formData,
     });
 
@@ -185,7 +196,12 @@ class ApiService {
   }
 
   async downloadFile(id: string): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/media/${id}/download`);
+    const response = await fetch(`${API_BASE_URL}/media/${id}/download`, {
+      headers: {
+        ...this.getAuthHeaders(),
+      },
+      credentials: 'include',
+    });
 
     if (!response.ok) {
       throw new Error(`Download failed: ${response.status} ${response.statusText}`);

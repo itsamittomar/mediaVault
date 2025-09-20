@@ -16,6 +16,7 @@ type MediaFile struct {
 	Size         int64              `json:"size" bson:"size"`
 	Category     *string            `json:"category" bson:"category,omitempty"`
 	Tags         []string           `json:"tags" bson:"tags"`
+	UserID       primitive.ObjectID `json:"userId" bson:"userId"`
 	URL          string             `json:"url" bson:"-"` // Not stored in DB, generated on request
 	CreatedAt    time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt    time.Time          `json:"updatedAt" bson:"updatedAt"`
@@ -45,6 +46,7 @@ type MediaResponse struct {
 	Size         int64              `json:"size"`
 	Category     *string            `json:"category"`
 	Tags         []string           `json:"tags"`
+	UserID       primitive.ObjectID `json:"userId"`
 	URL          string             `json:"url"`
 	CreatedAt    time.Time          `json:"createdAt"`
 	UpdatedAt    time.Time          `json:"updatedAt"`

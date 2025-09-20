@@ -18,6 +18,7 @@ type Config struct {
 	MinioBucketName string
 	MongoURI        string
 	MongoDatabase   string
+	JWTSecret       string
 }
 
 func LoadConfig() *Config {
@@ -38,6 +39,7 @@ func LoadConfig() *Config {
 		MinioBucketName: getEnv("MINIO_BUCKET_NAME", "mediavault"),
 		MongoURI:        getEnv("MONGODB_URI", "mongodb://localhost:27017"),
 		MongoDatabase:   getEnv("MONGODB_DATABASE", "mediavault"),
+		JWTSecret:       getEnv("JWT_SECRET", "your-default-secret-key-change-this-in-production"),
 	}
 }
 

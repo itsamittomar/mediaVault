@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"mediaVault-backend/internal/middleware"
 	"mediaVault-backend/internal/models"
 	"mediaVault-backend/internal/services"
 
@@ -25,8 +26,15 @@ func NewMediaHandler(dbService *services.DatabaseService, minioService *services
 
 // UploadFile handles file upload
 func (h *MediaHandler) UploadFile(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	// Parse multipart form
-	err := c.Request.ParseMultipartForm(100 << 20) // 100MB
+	err = c.Request.ParseMultipartForm(100 << 20) // 100MB
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
 		return
@@ -65,7 +73,7 @@ func (h *MediaHandler) UploadFile(c *gin.Context) {
 	}
 
 	// Upload to MinIO
-	mediaFile, err := h.minioService.UploadFile(file, metadata)
+	mediaFile, err := h.minioService.UploadFile(file, metadata, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file: " + err.Error()})
 		return
@@ -93,11 +101,24 @@ func (h *MediaHandler) UploadFile(c *gin.Context) {
 
 // GetFile retrieves a single file by ID
 func (h *MediaHandler) GetFile(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	id := c.Param("id")
 
 	mediaFile, err := h.dbService.GetMediaFileByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// Check if the file belongs to the current user
+	if mediaFile.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
@@ -114,6 +135,13 @@ func (h *MediaHandler) GetFile(c *gin.Context) {
 
 // ListFiles retrieves files with pagination and filtering
 func (h *MediaHandler) ListFiles(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	var query models.MediaQuery
 
 	// Parse query parameters manually to avoid strict validation
@@ -144,14 +172,14 @@ func (h *MediaHandler) ListFiles(c *gin.Context) {
 	}
 
 	// Get files from database
-	mediaFiles, err := h.dbService.ListMediaFiles(c.Request.Context(), query)
+	mediaFiles, err := h.dbService.ListMediaFiles(c.Request.Context(), userID, query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve files"})
 		return
 	}
 
 	// Get total count
-	totalCount, err := h.dbService.CountMediaFiles(c.Request.Context(), query)
+	totalCount, err := h.dbService.CountMediaFiles(c.Request.Context(), userID, query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count files"})
 		return
@@ -184,7 +212,26 @@ func (h *MediaHandler) ListFiles(c *gin.Context) {
 
 // UpdateFile updates file metadata
 func (h *MediaHandler) UpdateFile(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	id := c.Param("id")
+
+	// First check if the file exists and belongs to the user
+	existingFile, err := h.dbService.GetMediaFileByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	if existingFile.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
 
 	var updates models.UpdateMediaRequest
 	if err := c.ShouldBindJSON(&updates); err != nil {
@@ -211,12 +258,25 @@ func (h *MediaHandler) UpdateFile(c *gin.Context) {
 
 // DeleteFile deletes a file
 func (h *MediaHandler) DeleteFile(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	id := c.Param("id")
 
 	// Get file info first
 	mediaFile, err := h.dbService.GetMediaFileByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// Check if the file belongs to the current user
+	if mediaFile.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
@@ -237,11 +297,24 @@ func (h *MediaHandler) DeleteFile(c *gin.Context) {
 
 // DownloadFile serves the file content
 func (h *MediaHandler) DownloadFile(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
 	id := c.Param("id")
 
 	mediaFile, err := h.dbService.GetMediaFileByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	// Check if the file belongs to the current user
+	if mediaFile.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 		return
 	}
 
@@ -264,7 +337,14 @@ func (h *MediaHandler) DownloadFile(c *gin.Context) {
 
 // GetCategories retrieves all available categories
 func (h *MediaHandler) GetCategories(c *gin.Context) {
-	categories, err := h.dbService.GetCategories(c.Request.Context())
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
+	categories, err := h.dbService.GetCategories(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve categories"})
 		return

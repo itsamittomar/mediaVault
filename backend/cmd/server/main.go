@@ -33,8 +33,15 @@ func main() {
 		log.Fatal("Failed to initialize MinIO service:", err)
 	}
 
+	// Initialize JWT service
+	jwtService := services.NewJWTService(cfg.JWTSecret)
+
+	// Initialize auth service
+	authService := services.NewAuthService(dbService, jwtService)
+
 	// Initialize handlers
 	mediaHandler := handlers.NewMediaHandler(dbService, minioService)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	// Create Gin router
 	router := gin.New()
@@ -50,20 +57,37 @@ func main() {
 	// API routes
 	api := router.Group("/api/v1")
 	{
-		// Media endpoints
-		media := api.Group("/media")
+		// Public auth endpoints
+		auth := api.Group("/auth")
 		{
-			media.POST("/upload", mediaHandler.UploadFile)
-			media.GET("", mediaHandler.ListFiles)  // Remove the trailing slash
-			media.GET("/", mediaHandler.ListFiles) // Keep both for compatibility
-			media.GET("/:id", mediaHandler.GetFile)
-			media.PUT("/:id", mediaHandler.UpdateFile)
-			media.DELETE("/:id", mediaHandler.DeleteFile)
-			media.GET("/:id/download", mediaHandler.DownloadFile)
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.RefreshToken)
+			auth.POST("/logout", authHandler.Logout)
 		}
 
-		// Categories endpoint
-		api.GET("/categories", mediaHandler.GetCategories)
+		// Protected routes
+		protected := api.Group("")
+		protected.Use(middleware.AuthMiddleware(jwtService))
+		{
+			// User profile
+			protected.GET("/profile", authHandler.GetProfile)
+
+			// Media endpoints (now protected)
+			media := protected.Group("/media")
+			{
+				media.POST("/upload", mediaHandler.UploadFile)
+				media.GET("", mediaHandler.ListFiles)  // Remove the trailing slash
+				media.GET("/", mediaHandler.ListFiles) // Keep both for compatibility
+				media.GET("/:id", mediaHandler.GetFile)
+				media.PUT("/:id", mediaHandler.UpdateFile)
+				media.DELETE("/:id", mediaHandler.DeleteFile)
+				media.GET("/:id/download", mediaHandler.DownloadFile)
+			}
+
+			// Categories endpoint (now protected)
+			protected.GET("/categories", mediaHandler.GetCategories)
+		}
 	}
 
 	// Serve static files for production deployment

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type MinioService struct {
@@ -80,7 +81,7 @@ func (ms *MinioService) ensureBucketExists() error {
 	return nil
 }
 
-func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.CreateMediaRequest) (*models.MediaFile, error) {
+func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.CreateMediaRequest, userID primitive.ObjectID) (*models.MediaFile, error) {
 	// Open the file
 	src, err := file.Open()
 	if err != nil {
@@ -143,6 +144,7 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 		Size:         file.Size,
 		Category:     metadata.Category,
 		Tags:         metadata.Tags,
+		UserID:       userID,
 	}
 
 	return mediaFile, nil

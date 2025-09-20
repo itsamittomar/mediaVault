@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -26,7 +26,7 @@ export default function RegisterPage() {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      username: '',
       email: '',
       password: '',
     },
@@ -35,7 +35,7 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
     try {
-      await register(data.name, data.email, data.password);
+      await register(data.username, data.email, data.password);
       toast({
         title: 'Registration successful',
         description: 'Your account has been created.',
@@ -62,15 +62,15 @@ export default function RegisterPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="name"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="John Doe" 
-                    autoComplete="name"
-                    {...field} 
+                  <Input
+                    placeholder="johndoe"
+                    autoComplete="username"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />

@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 type User = {
   id: string;
-  name: string;
+  username: string;
   email: string;
   avatar?: string;
   role: 'user' | 'admin';
+  createdAt: string;
+  updatedAt: string;
 };
 
 type AuthContextType = {
@@ -13,84 +16,152 @@ type AuthContextType = {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshToken: () => Promise<void>;
 };
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(
+    localStorage.getItem('accessToken')
+  );
 
   useEffect(() => {
-    // Check if user is already logged in from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const response = await fetch(`${API_BASE}/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const { user: userData } = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('accessToken');
+            setAccessToken(null);
+          }
+        } catch (error) {
+          console.error('Failed to get user profile:', error);
+          localStorage.removeItem('accessToken');
+          setAccessToken(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        // For demo purposes, mock successful login with email "user@example.com" and password "password"
-        if (email === 'user@example.com' && password === 'password') {
-          const user = {
-            id: '1',
-            name: 'John Doe',
-            email: 'user@example.com',
-            role: 'user' as const,
-          };
-          localStorage.setItem('user', JSON.stringify(user));
-          setUser(user);
-          resolve();
-        } else if (email === 'admin@example.com' && password === 'password') {
-          const admin = {
-            id: '2',
-            name: 'Admin User',
-            email: 'admin@example.com',
-            role: 'admin' as const,
-          };
-          localStorage.setItem('user', JSON.stringify(admin));
-          setUser(admin);
-          resolve();
-        } else {
-          reject(new Error('Invalid credentials'));
-        }
-      }, 1000);
-    });
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Login failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      setAccessToken(data.accessToken);
+      localStorage.setItem('accessToken', data.accessToken);
+      toast.success(data.message || 'Login successful');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Login failed';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    // Simulate API call
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        // Check if email is already taken
-        if (email === 'user@example.com') {
-          reject(new Error('Email already exists'));
-          return;
-        }
-        
-        const newUser = {
-          id: Math.random().toString(36).substring(2, 9),
-          name,
-          email,
-          role: 'user' as const,
-        };
-        
-        localStorage.setItem('user', JSON.stringify(newUser));
-        setUser(newUser);
-        resolve();
-      }, 1000);
-    });
+  const register = async (username: string, email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Registration failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      setAccessToken(data.accessToken);
+      localStorage.setItem('accessToken', data.accessToken);
+      toast.success(data.message || 'Registration successful');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      setAccessToken(null);
+      setUser(null);
+      toast.success('Logged out successfully');
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      setAccessToken(data.accessToken);
+      localStorage.setItem('accessToken', data.accessToken);
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      setUser(null);
+      setAccessToken(null);
+      localStorage.removeItem('accessToken');
+    }
   };
 
   return (
@@ -102,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        refreshToken,
       }}
     >
       {children}
