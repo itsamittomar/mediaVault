@@ -42,8 +42,11 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 
 # Stage 3: Production image
-FROM gcr.io/distroless/static-debian12
+FROM alpine:latest
 WORKDIR /app
+
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates tzdata
 
 # Copy the backend binary
 COPY --from=backend-build /app/main .
@@ -51,8 +54,11 @@ COPY --from=backend-build /app/main .
 # Copy the frontend build
 COPY --from=frontend-build /app/dist ./static
 
+# Make binary executable
+RUN chmod +x ./main
+
 # Use Railway's $PORT environment variable
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["./main"]
+CMD ["./main"]
