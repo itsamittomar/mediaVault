@@ -42,11 +42,13 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 
 # Stage 3: Production image
-FROM alpine:latest
+FROM ubuntu:22.04
 WORKDIR /app
 
 # Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates tzdata
+RUN apt-get update && \
+    apt-get install -y ca-certificates tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy the backend binary
 COPY --from=backend-build /app/main .
@@ -59,6 +61,3 @@ RUN chmod +x ./main
 
 # Use Railway's $PORT environment variable
 EXPOSE 8080
-
-# Run the application
-CMD ["./main"]
