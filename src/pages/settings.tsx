@@ -12,10 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { apiService } from '@/services/apiService';
 
 const profileFormSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Name must be at least 2 characters.',
+  username: z.string().min(2, {
+    message: 'Username must be at least 2 characters.',
   }),
   email: z.string().email(),
 });
@@ -41,13 +42,14 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export default function SettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshToken } = useAuth();
   
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user?.name || '',
+      username: user?.username || '',
       email: user?.email || '',
     },
   });
@@ -61,31 +63,95 @@ export default function SettingsPage() {
     },
   });
   
-  function onProfileSubmit(data: ProfileFormValues) {
+  async function onProfileSubmit(data: ProfileFormValues) {
     setIsUpdating(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      await apiService.updateProfile(data);
+      await refreshToken(); // Refresh user data in context
       toast({
         title: 'Profile updated',
         description: 'Your profile information has been updated.',
       });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update profile',
+        variant: 'destructive',
+      });
+    } finally {
       setIsUpdating(false);
-    }, 1000);
+    }
   }
   
-  function onPasswordSubmit(data: PasswordFormValues) {
+  async function onPasswordSubmit(data: PasswordFormValues) {
     setIsUpdating(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      await apiService.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
       toast({
         title: 'Password updated',
         description: 'Your password has been changed successfully.',
       });
       passwordForm.reset();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to change password',
+        variant: 'destructive',
+      });
+    } finally {
       setIsUpdating(false);
-    }, 1000);
+    }
+  }
+
+  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Error',
+        description: 'Please select an image file',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Error',
+        description: 'File size must be less than 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      await apiService.uploadAvatar(file);
+      await refreshToken(); // Refresh user data to get new avatar URL
+      toast({
+        title: 'Avatar updated',
+        description: 'Your avatar has been uploaded successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to upload avatar',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset file input
+      event.target.value = '';
+    }
   }
 
   return (
@@ -115,15 +181,29 @@ export default function SettingsPage() {
             <CardContent>
               <div className="flex items-center space-x-4 mb-6">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
-                  <AvatarFallback className="text-lg">{user?.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={user?.avatar} alt={user?.username} />
+                  <AvatarFallback className="text-lg">{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
-                  <h3 className="font-medium">{user?.name}</h3>
+                  <h3 className="font-medium">{user?.username}</h3>
                   <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <Button size="sm" variant="outline" className="mt-2">
-                    Change avatar
-                  </Button>
+                  <div className="mt-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      id="avatar-upload"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isUploadingAvatar}
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                    >
+                      {isUploadingAvatar ? 'Uploading...' : 'Change avatar'}
+                    </Button>
+                  </div>
                 </div>
               </div>
               
@@ -131,10 +211,10 @@ export default function SettingsPage() {
                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                   <FormField
                     control={profileForm.control}
-                    name="name"
+                    name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>Username</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
