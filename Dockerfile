@@ -45,8 +45,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/server/main.go
 FROM alpine:latest
 WORKDIR /app
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates
+# Install essential packages for HTTPS and shell operations
+RUN apk --no-cache add ca-certificates bash
 
 # Copy the backend binary
 COPY --from=backend-build /app/main .
