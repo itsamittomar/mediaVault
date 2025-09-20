@@ -360,3 +360,27 @@ func (h *MediaHandler) HealthCheck(c *gin.Context) {
 		"service": "media-vault-backend",
 	})
 }
+
+// TestMinIO endpoint to test MinIO connectivity
+func (h *MediaHandler) TestMinIO(c *gin.Context) {
+	// Test bucket listing
+	buckets, err := h.minioService.Client.ListBuckets(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "MinIO connection failed",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	bucketNames := make([]string, len(buckets))
+	for i, bucket := range buckets {
+		bucketNames[i] = bucket.Name
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":        "MinIO connection successful",
+		"buckets":       bucketNames,
+		"target_bucket": h.minioService.BucketName,
+	})
+}

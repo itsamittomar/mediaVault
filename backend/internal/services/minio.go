@@ -19,12 +19,17 @@ import (
 )
 
 type MinioService struct {
-	client     *minio.Client
-	bucketName string
+	Client     *minio.Client
+	BucketName string
 	region     string
 }
 
 func NewMinioService(cfg *config.Config) (*MinioService, error) {
+	log.Printf("MinIO Config - Endpoint: %s, SSL: %t, Region: %s, Bucket: %s",
+		cfg.MinioEndpoint, cfg.MinioUseSSL, cfg.MinioRegion, cfg.MinioBucketName)
+	log.Printf("MinIO AccessKey length: %d, SecretKey length: %d",
+		len(cfg.MinioAccessKey), len(cfg.MinioSecretKey))
+
 	client, err := minio.New(cfg.MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
 		Secure: cfg.MinioUseSSL,
@@ -35,10 +40,20 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	}
 
 	service := &MinioService{
-		client:     client,
-		bucketName: cfg.MinioBucketName,
+		Client:     client,
+		BucketName: cfg.MinioBucketName,
 		region:     cfg.MinioRegion,
 	}
+
+	// Test connection with a simple bucket list operation
+	log.Printf("Testing MinIO connection...")
+	ctx := context.Background()
+	buckets, err := client.ListBuckets(ctx)
+	if err != nil {
+		log.Printf("MinIO connection test failed: %v", err)
+		return nil, fmt.Errorf("failed to connect to MinIO (check credentials): %w", err)
+	}
+	log.Printf("MinIO connection successful. Found %d buckets", len(buckets))
 
 	// Ensure bucket exists
 	if err := service.ensureBucketExists(); err != nil {
@@ -51,13 +66,13 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 func (ms *MinioService) ensureBucketExists() error {
 	ctx := context.Background()
 
-	exists, err := ms.client.BucketExists(ctx, ms.bucketName)
+	exists, err := ms.Client.BucketExists(ctx, ms.BucketName)
 	if err != nil {
 		return fmt.Errorf("failed to check if bucket exists: %w", err)
 	}
 
 	if !exists {
-		err = ms.client.MakeBucket(ctx, ms.bucketName, minio.MakeBucketOptions{Region: ms.region})
+		err = ms.Client.MakeBucket(ctx, ms.BucketName, minio.MakeBucketOptions{Region: ms.region})
 		if err != nil {
 			return fmt.Errorf("failed to create bucket: %w", err)
 		}
@@ -73,9 +88,9 @@ func (ms *MinioService) ensureBucketExists() error {
 					"Resource": ["arn:aws:s3:::%s/*"]
 				}
 			]
-		}`, ms.bucketName)
+		}`, ms.BucketName)
 
-		err = ms.client.SetBucketPolicy(ctx, ms.bucketName, policy)
+		err = ms.Client.SetBucketPolicy(ctx, ms.BucketName, policy)
 		if err != nil {
 			log.Printf("Warning: Failed to set bucket policy: %v", err)
 		}
@@ -85,6 +100,9 @@ func (ms *MinioService) ensureBucketExists() error {
 }
 
 func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.CreateMediaRequest, userID primitive.ObjectID) (*models.MediaFile, error) {
+	log.Printf("UploadFile - File: %s, Size: %d, ContentType: %s",
+		file.Filename, file.Size, file.Header.Get("Content-Type"))
+
 	// Open the file
 	src, err := file.Open()
 	if err != nil {
@@ -96,6 +114,8 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 	fileID := uuid.New()
 	ext := filepath.Ext(file.Filename)
 	fileName := fmt.Sprintf("%s%s", fileID.String(), ext)
+
+	log.Printf("Generated filename: %s for bucket: %s", fileName, ms.BucketName)
 
 	// Prepare MinIO metadata (only user metadata, not system headers)
 	minioMetadata := map[string]string{
@@ -122,9 +142,9 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 	}
 
 	// Upload to MinIO
-	_, err = ms.client.PutObject(
+	_, err = ms.Client.PutObject(
 		context.Background(),
-		ms.bucketName,
+		ms.BucketName,
 		fileName,
 		src,
 		file.Size,
@@ -154,9 +174,9 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 }
 
 func (ms *MinioService) GetFileURL(fileName string) (string, error) {
-	url, err := ms.client.PresignedGetObject(
+	url, err := ms.Client.PresignedGetObject(
 		context.Background(),
-		ms.bucketName,
+		ms.BucketName,
 		fileName,
 		7*24*time.Hour, // 7 days expiry
 		nil,
@@ -169,9 +189,9 @@ func (ms *MinioService) GetFileURL(fileName string) (string, error) {
 }
 
 func (ms *MinioService) DeleteFile(fileName string) error {
-	err := ms.client.RemoveObject(
+	err := ms.Client.RemoveObject(
 		context.Background(),
-		ms.bucketName,
+		ms.BucketName,
 		fileName,
 		minio.RemoveObjectOptions{},
 	)
@@ -183,9 +203,9 @@ func (ms *MinioService) DeleteFile(fileName string) error {
 }
 
 func (ms *MinioService) GetFileContent(fileName string) (io.ReadCloser, error) {
-	obj, err := ms.client.GetObject(
+	obj, err := ms.Client.GetObject(
 		context.Background(),
-		ms.bucketName,
+		ms.BucketName,
 		fileName,
 		minio.GetObjectOptions{},
 	)
@@ -197,9 +217,9 @@ func (ms *MinioService) GetFileContent(fileName string) (io.ReadCloser, error) {
 }
 
 func (ms *MinioService) GetFileInfo(fileName string) (*minio.ObjectInfo, error) {
-	info, err := ms.client.StatObject(
+	info, err := ms.Client.StatObject(
 		context.Background(),
-		ms.bucketName,
+		ms.BucketName,
 		fileName,
 		minio.StatObjectOptions{},
 	)

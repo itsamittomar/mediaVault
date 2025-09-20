@@ -54,6 +54,9 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", mediaHandler.HealthCheck)
 
+	// MinIO test endpoint (public for debugging)
+	router.GET("/test-minio", mediaHandler.TestMinIO)
+
 	// API routes
 	api := router.Group("/api/v1")
 	{
