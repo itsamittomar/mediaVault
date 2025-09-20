@@ -21,7 +21,7 @@ COPY components.json ./
 RUN npm run build
 
 # Stage 2: Build the Go backend
-FROM golang:1.21-alpine AS backend-build
+FROM golang:1.24-alpine AS backend-build
 WORKDIR /app
 
 # Install dependencies
