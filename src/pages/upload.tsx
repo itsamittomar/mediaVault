@@ -12,7 +12,6 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, File, X, FilePlus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { cn, formatFileSize } from '@/lib/utils';
 import { getCategories } from '@/data/media';
@@ -42,7 +41,6 @@ export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
   const categories = getCategories();
 
@@ -72,16 +70,12 @@ export default function UploadPage() {
       rejectedFiles.forEach((file) => {
         file.errors.forEach((error) => {
           if (error.code === 'file-too-large') {
-            toast({
-              title: 'File too large',
+            toast.error('File too large', {
               description: `Maximum file size is ${formatFileSize(MAX_FILE_SIZE)}`,
-              variant: 'destructive',
             });
           } else {
-            toast({
-              title: 'Invalid file',
+            toast.error('Invalid file', {
               description: error.message,
-              variant: 'destructive',
             });
           }
         });
