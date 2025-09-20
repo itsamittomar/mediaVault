@@ -10,7 +10,6 @@ RUN npm ci
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
-COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
 COPY tailwind.config.js ./
