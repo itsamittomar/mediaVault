@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, File, X, FilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn, formatFileSize } from '@/lib/utils';
 import { getCategories } from '@/data/media';
 import { apiService } from '@/services/apiService';
@@ -90,10 +91,8 @@ export default function UploadPage() {
 
   const onSubmit = async (data: UploadFormValues) => {
     if (files.length === 0) {
-      toast({
-        title: 'No file selected',
+      toast.error('No file selected', {
         description: 'Please select a file to upload',
-        variant: 'destructive',
       });
       return;
     }
@@ -101,9 +100,24 @@ export default function UploadPage() {
     setIsUploading(true);
     setUploadProgress(0);
 
+    // Show initial upload notification
+    const uploadToastId = toast.loading(
+      `Uploading ${files.length > 1 ? `${files.length} files` : files[0].name}...`,
+      {
+        description: 'Please wait while your files are being uploaded',
+        duration: Infinity,
+      }
+    );
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+
+        // Update toast with current file info
+        toast.loading(`Uploading ${file.name}...`, {
+          id: uploadToastId,
+          description: `File ${i + 1} of ${files.length}`,
+        });
 
         // Prepare metadata
         const metadata = {
@@ -121,9 +135,15 @@ export default function UploadPage() {
         setUploadProgress(progress);
       }
 
-      toast({
-        title: 'Upload successful',
+      // Dismiss loading toast and show success
+      toast.dismiss(uploadToastId);
+      toast.success('Upload successful! ✨', {
         description: `${files.length > 1 ? `${files.length} files` : files[0].name} uploaded successfully`,
+        duration: 5000,
+        action: {
+          label: 'View Files',
+          onClick: () => navigate('/dashboard'),
+        },
       });
 
       setFiles([]);
@@ -131,14 +151,13 @@ export default function UploadPage() {
 
       setTimeout(() => {
         navigate('/dashboard');
-      }, 1500);
+      }, 2000);
 
     } catch (error) {
       console.error('Upload failed:', error);
-      toast({
-        title: 'Upload failed',
+      toast.dismiss(uploadToastId);
+      toast.error('Upload failed ❌', {
         description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive',
       });
     } finally {
       setIsUploading(false);

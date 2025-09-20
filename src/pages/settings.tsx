@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -10,8 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { Camera, Upload, User } from 'lucide-react';
+import { toast } from 'sonner';
+import { AvatarSelector } from '@/components/avatar-selector';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -41,8 +45,12 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export default function SettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast: toastHook } = useToast();
+  const { user, uploadAvatar } = useAuth();
   
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -61,12 +69,87 @@ export default function SettingsPage() {
     },
   });
   
+  const handleAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setAvatarLoading(true);
+      setUploadProgress(0);
+
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      await uploadAvatar(file);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      // Show success notification with real-time feedback
+      toast.success('Avatar updated successfully!', {
+        description: 'Your profile picture has been updated.',
+        duration: 4000,
+      });
+
+      setTimeout(() => {
+        setUploadProgress(0);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      toast.error('Failed to upload avatar', {
+        description: error instanceof Error ? error.message : 'An error occurred during upload',
+      });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleAvatarUpload(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const openAvatarSelector = () => {
+    setShowAvatarSelector(true);
+  };
+
+  const getUserInitials = (username: string) => {
+    return username
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   function onProfileSubmit(data: ProfileFormValues) {
     setIsUpdating(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      toast({
+      toastHook({
         title: 'Profile updated',
         description: 'Your profile information has been updated.',
       });
@@ -76,10 +159,10 @@ export default function SettingsPage() {
   
   function onPasswordSubmit(data: PasswordFormValues) {
     setIsUpdating(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      toast({
+      toastHook({
         title: 'Password updated',
         description: 'Your password has been changed successfully.',
       });
@@ -113,18 +196,91 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center space-x-4 mb-6">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={user?.avatar} alt={user?.name} />
-                  <AvatarFallback className="text-lg">{user?.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-1">
-                  <h3 className="font-medium">{user?.name}</h3>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <Button size="sm" variant="outline" className="mt-2">
-                    Change avatar
+              <div className="flex items-center space-x-6 mb-6">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={user?.avatar} alt={user?.username} />
+                    <AvatarFallback className="text-lg">
+                      {user?.username ? getUserInitials(user.username) : <User />}
+                    </AvatarFallback>
+                  </Avatar>
+                  {avatarLoading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="text-white text-xs font-medium">
+                        {uploadProgress}%
+                      </div>
+                    </div>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
+                    onClick={triggerFileInput}
+                    disabled={avatarLoading}
+                  >
+                    <Camera className="h-4 w-4" />
                   </Button>
                 </div>
+
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h3 className="font-medium">{user?.username}</h3>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={openAvatarSelector}
+                        disabled={avatarLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        {avatarLoading ? 'Uploading...' : 'Change Avatar'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={triggerFileInput}
+                        disabled={avatarLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload
+                      </Button>
+                    </div>
+
+                    {uploadProgress > 0 && uploadProgress < 100 && (
+                      <div className="space-y-2">
+                        <Progress value={uploadProgress} className="w-full max-w-xs" />
+                        <p className="text-xs text-muted-foreground">
+                          Uploading... {uploadProgress}%
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG or GIF. Max file size 5MB.
+                    </p>
+                  </div>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {/* Avatar Selector Dialog */}
+                <AvatarSelector
+                  open={showAvatarSelector}
+                  onOpenChange={setShowAvatarSelector}
+                  onFileSelect={handleAvatarUpload}
+                />
               </div>
               
               <Form {...profileForm}>

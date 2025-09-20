@@ -19,6 +19,8 @@ type AuthContextType = {
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => void;
+  uploadAvatar: (file: File) => Promise<void>;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (
@@ -166,6 +168,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
+  };
+
+  const uploadAvatar = async (file: File) => {
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch(`${API_BASE}/profile/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Avatar upload failed');
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      toast.success(data.message || 'Avatar updated successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Avatar upload failed';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -176,6 +220,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         refreshToken,
+        updateUser,
+        uploadAvatar,
       }}
     >
       {children}
