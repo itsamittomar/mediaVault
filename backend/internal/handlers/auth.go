@@ -263,14 +263,6 @@ func (h *AuthHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// Generate URL for the uploaded avatar
-	avatarURL, err := h.minioService.GetFileURL(mediaFile.FileName)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate avatar URL"})
-		return
-	}
-
-	// Update user's avatar field with the media file URL
 	// Update user's avatar field with the media file URL
 	avatarURL := mediaFile.URL
 	user, err := h.authService.UpdateProfile(c.Request.Context(), userID.(primitive.ObjectID), &models.UpdateProfileRequest{
