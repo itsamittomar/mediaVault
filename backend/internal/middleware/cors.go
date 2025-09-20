@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/gin-contrib/cors"
-	"github.co
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
+	config := cors.DefaultConfig()
+
 	// Get CORS origins from environment variable
 	corsOrigins := os.Getenv("CORS_ORIGINS")
 
@@ -29,8 +29,6 @@ func CORSMiddleware() gin.HandlerFunc {
 			"http://127.0.0.1:3000",
 			"http://127.0.0.1:5173",
 		}
-		"http://127.0.0.1:3000",
-		"http://127.0.0.1:5173",
 	}
 
 	// Allow specific headers
