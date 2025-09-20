@@ -41,7 +41,7 @@ func main() {
 
 	// Initialize handlers
 	mediaHandler := handlers.NewMediaHandler(dbService, minioService)
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService, minioService)
 
 	// Create Gin router
 	router := gin.New()
@@ -70,8 +70,11 @@ func main() {
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddleware(jwtService))
 		{
-			// User profile
+			// User profile management
 			protected.GET("/profile", authHandler.GetProfile)
+			protected.PUT("/profile", authHandler.UpdateProfile)
+			protected.POST("/profile/change-password", authHandler.ChangePassword)
+			protected.POST("/profile/avatar", authHandler.UploadAvatar)
 
 			// Media endpoints (now protected)
 			media := protected.Group("/media")
