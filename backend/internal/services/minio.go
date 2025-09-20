@@ -30,11 +30,18 @@ func NewMinioService(cfg *config.Config) (*MinioService, error) {
 	log.Printf("MinIO AccessKey length: %d, SecretKey length: %d",
 		len(cfg.MinioAccessKey), len(cfg.MinioSecretKey))
 
-	client, err := minio.New(cfg.MinioEndpoint, &minio.Options{
+	// Create MinIO client options
+	opts := &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioSecretKey, ""),
 		Secure: cfg.MinioUseSSL,
-		Region: cfg.MinioRegion,
-	})
+	}
+
+	// Only set region if not empty - let AWS SDK auto-detect for S3
+	if cfg.MinioRegion != "" {
+		opts.Region = cfg.MinioRegion
+	}
+
+	client, err := minio.New(cfg.MinioEndpoint, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MinIO client: %w", err)
 	}
@@ -141,9 +148,15 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 		minioMetadata["X-Amz-Meta-Tags"] = tagsStr
 	}
 
-	// Upload to MinIO
+	// Upload to MinIO with timeout
+	log.Printf("Attempting to upload %s to bucket %s (region: %s)", fileName, ms.BucketName, ms.region)
+
+	// Create context with timeout for upload
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
 	_, err = ms.Client.PutObject(
-		context.Background(),
+		ctx,
 		ms.BucketName,
 		fileName,
 		src,
@@ -154,8 +167,10 @@ func (ms *MinioService) UploadFile(file *multipart.FileHeader, metadata models.C
 		},
 	)
 	if err != nil {
+		log.Printf("MinIO upload failed: %v", err)
 		return nil, fmt.Errorf("failed to upload file to MinIO: %w", err)
 	}
+	log.Printf("MinIO upload successful for %s", fileName)
 
 	// Create MediaFile struct
 	mediaFile := &models.MediaFile{
