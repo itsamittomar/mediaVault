@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy frontend package files
 COPY package*.json ./
-RUN npm install
+RUN rm -rf node_modules package-lock.json && npm install
 
 # Copy frontend source (exclude backend and node_modules)
 COPY src ./src
