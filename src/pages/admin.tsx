@@ -146,7 +146,7 @@ export default function AdminPage() {
         </p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -228,53 +228,55 @@ export default function AdminPage() {
                 />
               </div>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Storage Used</TableHead>
-                    <TableHead>Files</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-xs text-muted-foreground">{user.email}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.role === 'admin' ? "default" : "outline"}>
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.status === 'active' ? "success" : "secondary"} className={user.status === 'active' ? "bg-green-500/10 text-green-700 dark:text-green-400" : ""}>
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatFileSize(user.storageUsed)}</TableCell>
-                      <TableCell>{user.filesCount}</TableCell>
-                      <TableCell>{format(new Date(user.lastActive), 'PP')}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">Edit</Button>
-                      </TableCell>
+            <CardContent className="overflow-x-auto">
+              <div className="min-w-[800px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead className="hidden sm:table-cell">Role</TableHead>
+                      <TableHead className="hidden md:table-cell">Status</TableHead>
+                      <TableHead className="hidden lg:table-cell">Storage Used</TableHead>
+                      <TableHead className="hidden sm:table-cell">Files</TableHead>
+                      <TableHead className="hidden lg:table-cell">Last Active</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                              <AvatarFallback className="text-xs">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm sm:text-base truncate">{user.name}</div>
+                              <div className="text-xs text-muted-foreground truncate sm:block hidden">{user.email}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <Badge variant={user.role === 'admin' ? "default" : "outline"} className="text-xs">
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge variant={user.status === 'active' ? "success" : "secondary"} className={user.status === 'active' ? "bg-green-500/10 text-green-700 dark:text-green-400 text-xs" : "text-xs"}>
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">{formatFileSize(user.storageUsed)}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">{user.filesCount}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">{format(new Date(user.lastActive), 'PP')}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="text-xs">Edit</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -287,47 +289,49 @@ export default function AdminPage() {
                 View and manage all files in the system.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Uploaded</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mediaItems.slice(0, 6).map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="font-medium">{item.title}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {item.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {mockUsers.find(u => u.id === item.userId)?.name || 'Unknown'}
-                      </TableCell>
-                      <TableCell>{formatFileSize(item.size)}</TableCell>
-                      <TableCell>{format(new Date(item.createdAt), 'PP')}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">View</Button>
-                      </TableCell>
+            <CardContent className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="hidden sm:table-cell">Type</TableHead>
+                      <TableHead className="hidden md:table-cell">Owner</TableHead>
+                      <TableHead className="hidden lg:table-cell">Size</TableHead>
+                      <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {mediaItems.slice(0, 6).map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">{item.title}</div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <Badge variant="outline" className="capitalize text-xs">
+                            {item.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">
+                          {mockUsers.find(u => u.id === item.userId)?.name || 'Unknown'}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">{formatFileSize(item.size)}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">{format(new Date(item.createdAt), 'PP')}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="text-xs">View</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="analytics">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Storage Distribution</CardTitle>
@@ -336,7 +340,7 @@ export default function AdminPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
+                <div className="h-64 sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -368,7 +372,7 @@ export default function AdminPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
+                <div className="h-64 sm:h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={activityData}>
                       <CartesianGrid strokeDasharray="3 3" />

@@ -131,7 +131,7 @@ func main() {
 			}
 
 			// Media filter endpoints - use different base path to avoid conflict
-			mediaFilters := protected.Group("/filters/media/:mediaId")
+			mediaFilters := protected.Group("/media-filters/:mediaId")
 			{
 				mediaFilters.POST("/apply/:filterId", filterHandler.ApplyFilter)
 				mediaFilters.GET("/suggestions", filterHandler.GetFilterSuggestions)

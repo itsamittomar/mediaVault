@@ -116,7 +116,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">{getPageTitle()}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{getPageTitle()}</h1>
 
         <div className="flex items-center gap-2">
           <Select
@@ -131,7 +131,7 @@ export default function DashboardPage() {
               );
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[140px] sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -164,15 +164,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Search Form */}
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
-            placeholder="Search files by name, description, or tags..."
+            placeholder="Search files..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
           {searchInput && (
             <button
@@ -184,7 +184,7 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
-        <Button type="submit" variant="default">
+        <Button type="submit" variant="default" className="w-full sm:w-auto">
           Search
         </Button>
       </form>
