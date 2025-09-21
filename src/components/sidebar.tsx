@@ -72,11 +72,11 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="hidden lg:flex flex-col w-64 border-r bg-card min-h-screen">
+    <div className="flex flex-col w-64 border-r bg-card min-h-screen">
       <div className="flex h-14 items-center border-b px-4">
         <Link to="/" className="flex items-center gap-2">
           <CircleStackIcon className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold">MediaVault</span>
+          <span className="text-lg sm:text-xl font-semibold">MediaVault</span>
         </Link>
       </div>
       <ScrollArea className="flex-1 py-4">

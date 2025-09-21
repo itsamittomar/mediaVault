@@ -46,10 +46,11 @@ export default function Header({ user }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
-        <div className="hidden md:flex items-center gap-2 mr-4">
-          <CircleStackIcon className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold">MediaVault</span>
+      <div className="container flex h-16 items-center justify-between px-3 sm:px-4">
+        <div className="flex items-center gap-2 mr-2 sm:mr-4">
+          <CircleStackIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <span className="text-lg sm:text-xl font-semibold hidden sm:block">MediaVault</span>
+          <span className="text-base font-semibold sm:hidden">MV</span>
         </div>
         
         <div className="lg:hidden">
@@ -60,20 +61,20 @@ export default function Header({ user }: HeaderProps) {
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[240px] sm:w-[300px] p-0">
+            <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
               <Sidebar />
             </SheetContent>
           </Sheet>
         </div>
         
-        <div className="flex-1 flex justify-center px-4">
+        <div className="flex-1 flex justify-center px-2 sm:px-4">
           <Search />
         </div>
         
-        <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon" className="hidden md:flex">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Button asChild variant="ghost" size="icon" className="hidden sm:flex">
             <Link to="/upload">
-              <Upload className="h-5 w-5" />
+              <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="sr-only">Upload media</span>
             </Link>
           </Button>
