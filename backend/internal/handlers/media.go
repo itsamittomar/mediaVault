@@ -337,14 +337,7 @@ func (h *MediaHandler) DownloadFile(c *gin.Context) {
 
 // GetCategories retrieves all available categories
 func (h *MediaHandler) GetCategories(c *gin.Context) {
-	// Get current user ID
-	userID, err := middleware.GetUserIDFromContext(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
-		return
-	}
-
-	categories, err := h.dbService.GetCategories(c.Request.Context(), userID)
+	categories, err := h.dbService.GetCategories(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve categories"})
 		return
@@ -358,55 +351,5 @@ func (h *MediaHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "healthy",
 		"service": "media-vault-backend",
-	})
-}
-
-// TestMinIO endpoint to test MinIO connectivity
-func (h *MediaHandler) TestMinIO(c *gin.Context) {
-	ctx := c.Request.Context()
-
-	// Test bucket listing
-	buckets, err := h.minioService.Client.ListBuckets(ctx)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "MinIO connection failed",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	bucketNames := make([]string, len(buckets))
-	for i, bucket := range buckets {
-		bucketNames[i] = bucket.Name
-	}
-
-	// Test specific bucket access
-	targetBucket := h.minioService.BucketName
-	bucketExists, err := h.minioService.Client.BucketExists(ctx, targetBucket)
-	bucketStatus := "accessible"
-	if err != nil {
-		bucketStatus = "error: " + err.Error()
-	} else if !bucketExists {
-		bucketStatus = "does not exist"
-	}
-
-	// Test bucket location (region)
-	bucketLocation := "unknown"
-	if bucketExists {
-		location, err := h.minioService.Client.GetBucketLocation(ctx, targetBucket)
-		if err != nil {
-			bucketLocation = "error getting location: " + err.Error()
-		} else {
-			bucketLocation = location
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":          "MinIO connection successful",
-		"buckets":         bucketNames,
-		"target_bucket":   targetBucket,
-		"bucket_exists":   bucketExists,
-		"bucket_status":   bucketStatus,
-		"bucket_location": bucketLocation,
 	})
 }

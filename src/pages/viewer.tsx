@@ -10,7 +10,7 @@ import { formatFileSize } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import MediaViewer from '@/components/media-viewer';
+import EnhancedMediaViewer from '@/components/enhanced-media-viewer';
 
 export default function ViewerPage() {
   const { id } = useParams<{ id: string }>();
@@ -196,7 +196,7 @@ export default function ViewerPage() {
         <div className="md:col-span-2">
           <Card>
             <CardContent className="p-0 overflow-hidden rounded-lg">
-              <MediaViewer media={media} />
+              <EnhancedMediaViewer media={media} />
             </CardContent>
           </Card>
         </div>

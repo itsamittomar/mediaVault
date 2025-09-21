@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
-import { FileStackIcon as CircleStackIcon, Home, Upload, Settings, FolderOpen, LayoutDashboard, FileImage, FileVideo, FileAudio, FileText, Star } from 'lucide-react';
+import { FileStackIcon as CircleStackIcon, Home, Upload, Settings, FolderOpen, LayoutDashboard, FileImage, FileVideo, FileAudio, FileText, Star, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 
 export default function Sidebar() {
@@ -49,6 +49,11 @@ export default function Sidebar() {
       title: 'Favorites',
       href: '/dashboard?favorite=true',
       icon: Star,
+    },
+    {
+      title: 'Smart Filters',
+      href: '/filters',
+      icon: Sparkles,
     },
     {
       title: 'Settings',
