@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"mediaVault-backend/internal/config"
@@ -39,9 +40,39 @@ func main() {
 	// Initialize auth service
 	authService := services.NewAuthService(dbService, jwtService)
 
+	// Initialize filter services
+	filterService := services.NewFilterService(dbService.GetDatabase(), minioService)
+
+	// Initialize AI filter service with configured provider
+	aiProvider := services.AIProvider(os.Getenv("AI_PROVIDER"))
+	if aiProvider == "" {
+		aiProvider = services.ProviderLocal
+	}
+
+	var apiKey string
+	switch aiProvider {
+	case services.ProviderHuggingFace:
+		apiKey = os.Getenv("HUGGINGFACE_API_KEY")
+	case services.ProviderStability:
+		apiKey = os.Getenv("STABILITY_AI_API_KEY")
+	case services.ProviderOpenAI:
+		apiKey = os.Getenv("OPENAI_AI_API_KEY")
+	default:
+		aiProvider = services.ProviderLocal
+		apiKey = ""
+	}
+
+	log.Printf("Initializing AI service with provider: %s", aiProvider)
+	aiFilterService := services.NewAIFilterService(aiProvider, apiKey)
+
+	// Initialize image analysis service
+	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+	imageAnalysisService := services.NewImageAnalysisService(openaiAPIKey)
+
 	// Initialize handlers
-	mediaHandler := handlers.NewMediaHandler(dbService, minioService)
+	mediaHandler := handlers.NewMediaHandler(dbService, minioService, imageAnalysisService)
 	authHandler := handlers.NewAuthHandler(authService, minioService)
+	filterHandler := handlers.NewFilterHandler(dbService.GetDatabase(), filterService, aiFilterService)
 
 	// Create Gin router
 	router := gin.New()
@@ -53,9 +84,6 @@ func main() {
 
 	// Health check endpoint
 	router.GET("/health", mediaHandler.HealthCheck)
-
-	// MinIO test endpoint (public for debugging)
-	router.GET("/test-minio", mediaHandler.TestMinIO)
 
 	// API routes
 	api := router.Group("/api/v1")
@@ -83,6 +111,7 @@ func main() {
 			media := protected.Group("/media")
 			{
 				media.POST("/upload", mediaHandler.UploadFile)
+				media.POST("/auto-suggestions", mediaHandler.GenerateAutoSuggestions)
 				media.GET("", mediaHandler.ListFiles)  // Remove the trailing slash
 				media.GET("/", mediaHandler.ListFiles) // Keep both for compatibility
 				media.GET("/:id", mediaHandler.GetFile)
@@ -93,6 +122,35 @@ func main() {
 
 			// Categories endpoint (now protected)
 			protected.GET("/categories", mediaHandler.GetCategories)
+
+			// Filter endpoints
+			filters := protected.Group("/filters")
+			{
+				filters.GET("/presets", filterHandler.GetFilterPresets)
+				filters.POST("/custom", filterHandler.CreateCustomFilter)
+			}
+
+			// Media filter endpoints - use different base path to avoid conflict
+			mediaFilters := protected.Group("/filters/media/:mediaId")
+			{
+				mediaFilters.POST("/apply/:filterId", filterHandler.ApplyFilter)
+				mediaFilters.GET("/suggestions", filterHandler.GetFilterSuggestions)
+			}
+
+			// AI filter endpoints
+			aiFilters := protected.Group("/ai-filters/media/:mediaId")
+			{
+				aiFilters.POST("/style-transfer", filterHandler.ApplyAIStyleTransfer)
+				aiFilters.POST("/mood-enhancement", filterHandler.ApplyAIMoodEnhancement)
+			}
+
+			// User filter analytics endpoints
+			userFilters := protected.Group("/users/me/filters")
+			{
+				userFilters.GET("/analytics", filterHandler.GetUserFilterAnalytics)
+				userFilters.GET("/history", filterHandler.GetFilterHistory)
+				userFilters.POST("/style-profile", filterHandler.UpdateUserStyleProfile)
+			}
 		}
 	}
 

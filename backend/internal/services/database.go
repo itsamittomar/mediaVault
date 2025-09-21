@@ -62,6 +62,10 @@ func (ds *DatabaseService) Close() error {
 	return ds.client.Disconnect(ctx)
 }
 
+func (ds *DatabaseService) GetDatabase() *mongo.Database {
+	return ds.database
+}
+
 func (ds *DatabaseService) CreateMediaFile(ctx context.Context, media *models.MediaFile) error {
 	media.CreatedAt = time.Now()
 	media.UpdatedAt = time.Now()
@@ -158,7 +162,6 @@ func (ds *DatabaseService) DeleteMediaFile(ctx context.Context, id string) error
 
 	return nil
 }
-
 func (ds *DatabaseService) ListMediaFiles(ctx context.Context, userID primitive.ObjectID, query models.MediaQuery) ([]*models.MediaFile, error) {
 	filter := bson.M{
 		"userId": userID, // Filter by user ID
@@ -223,7 +226,6 @@ func (ds *DatabaseService) ListMediaFiles(ctx context.Context, userID primitive.
 
 	return mediaFiles, nil
 }
-
 func (ds *DatabaseService) CountMediaFiles(ctx context.Context, userID primitive.ObjectID, query models.MediaQuery) (int64, error) {
 	filter := bson.M{
 		"userId": userID, // Filter by user ID
@@ -251,12 +253,8 @@ func (ds *DatabaseService) CountMediaFiles(ctx context.Context, userID primitive
 
 	return count, nil
 }
-
-func (ds *DatabaseService) GetCategories(ctx context.Context, userID primitive.ObjectID) ([]string, error) {
+func (ds *DatabaseService) GetCategories(ctx context.Context) ([]string, error) {
 	pipeline := []bson.M{
-		{"$match": bson.M{
-			"userId": userID, // Filter by user ID
-		}},
 		{"$group": bson.M{
 			"_id": "$category",
 		}},

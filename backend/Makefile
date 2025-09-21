@@ -33,3 +33,11 @@ test:
 # Build for production
 build-prod:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/server ./cmd/server
+
+# Initialize database with default filter presets
+init-filters:
+	go run ./scripts/init_filters.go
+
+# Setup complete environment (build + initialize data)
+setup: build init-filters
+	@echo "Setup complete! You can now run 'make run' to start the server."

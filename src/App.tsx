@@ -10,6 +10,7 @@ import UploadPage from '@/pages/upload';
 import ViewerPage from '@/pages/viewer';
 import SettingsPage from '@/pages/settings';
 import AdminPage from '@/pages/admin';
+import FiltersPage from '@/pages/filters';
 import ProtectedRoute from '@/components/protected-route';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
           <Route path="/all-files" element={<AllFilesPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/view/:id" element={<ViewerPage />} />
+          <Route path="/filters" element={<FiltersPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Route>
