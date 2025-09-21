@@ -7,19 +7,38 @@ import (
 )
 
 type MediaFile struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	FileName     string             `json:"fileName" bson:"fileName"`
-	OriginalName string             `json:"originalName" bson:"originalName"`
-	Title        string             `json:"title" bson:"title"`
-	Description  *string            `json:"description" bson:"description,omitempty"`
-	MimeType     string             `json:"mimeType" bson:"mimeType"`
-	Size         int64              `json:"size" bson:"size"`
-	Category     *string            `json:"category" bson:"category,omitempty"`
-	Tags         []string           `json:"tags" bson:"tags"`
-	UserID       primitive.ObjectID `json:"userId" bson:"userId"`
-	URL          string             `json:"url" bson:"-"` // Not stored in DB, generated on request
-	CreatedAt    time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedAt    time.Time          `json:"updatedAt" bson:"updatedAt"`
+	ID                primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	FileName          string             `json:"fileName" bson:"fileName"`
+	OriginalName      string             `json:"originalName" bson:"originalName"`
+	Title             string             `json:"title" bson:"title"`
+	Description       *string            `json:"description" bson:"description,omitempty"`
+	MimeType          string             `json:"mimeType" bson:"mimeType"`
+	Size              int64              `json:"size" bson:"size"`
+	Category          *string            `json:"category" bson:"category,omitempty"`
+	Tags              []string           `json:"tags" bson:"tags"`
+	UserID            primitive.ObjectID `json:"userId" bson:"userId"`
+	URL               string             `json:"url" bson:"-"` // Not stored in DB, generated on request
+	CreatedAt         time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt         time.Time          `json:"updatedAt" bson:"updatedAt"`
+
+	// Auto-generated metadata
+	AIAnalysis        *AIAnalysisMetadata `json:"aiAnalysis,omitempty" bson:"aiAnalysis,omitempty"`
+	AutoTags          []string            `json:"autoTags,omitempty" bson:"autoTags,omitempty"`
+	AutoDescription   *string             `json:"autoDescription,omitempty" bson:"autoDescription,omitempty"`
+	AutoCategory      *string             `json:"autoCategory,omitempty" bson:"autoCategory,omitempty"`
+	DetectedObjects   []string            `json:"detectedObjects,omitempty" bson:"detectedObjects,omitempty"`
+	Scene             *string             `json:"scene,omitempty" bson:"scene,omitempty"`
+	Style             *string             `json:"style,omitempty" bson:"style,omitempty"`
+	DominantColors    []string            `json:"dominantColors,omitempty" bson:"dominantColors,omitempty"`
+	AnalysisComplete  bool                `json:"analysisComplete" bson:"analysisComplete"`
+	AnalysisError     *string             `json:"analysisError,omitempty" bson:"analysisError,omitempty"`
+}
+
+type AIAnalysisMetadata struct {
+	Confidence     float64   `json:"confidence" bson:"confidence"`
+	Model          string    `json:"model" bson:"model"`
+	ProcessedAt    time.Time `json:"processedAt" bson:"processedAt"`
+	ProcessingTime int64     `json:"processingTime" bson:"processingTime"` // in milliseconds
 }
 
 type CreateMediaRequest struct {

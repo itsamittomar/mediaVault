@@ -58,6 +58,17 @@ export interface UpdateRequest {
   tags?: string[];
 }
 
+export interface AutoSuggestionsResponse {
+  tags: string[];
+  description: string;
+  category: string;
+  detectedObjects?: string[];
+  scene?: string;
+  style?: string;
+  colors?: string[];
+  confidence: number;
+}
+
 export interface ListQuery {
   category?: string;
   type?: string;
@@ -262,6 +273,40 @@ class ApiService {
 
   async healthCheck(): Promise<{ status: string; service: string }> {
     const response = await fetch(`${API_BASE_URL.replace('/api/v1', '')}/health`);
+    return response.json();
+  }
+
+  async getAutoSuggestions(file: File): Promise<AutoSuggestionsResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/media/auto-suggestions`, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeaders(),
+      },
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = `Auto-suggestions failed: ${response.status} ${response.statusText}`;
+
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error) {
+          errorMessage = errorJson.error;
+        }
+      } catch {
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   }
 }

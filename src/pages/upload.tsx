@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, File, X, FilePlus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Upload, File, X, FilePlus, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn, formatFileSize } from '@/lib/utils';
 import { getCategories } from '@/data/media';
-import { apiService } from '@/services/apiService';
+import { apiService, type AutoSuggestionsResponse } from '@/services/apiService';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ACCEPTED_FILE_TYPES = {
@@ -41,6 +42,8 @@ export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  const [autoSuggestions, setAutoSuggestions] = useState<AutoSuggestionsResponse | null>(null);
   const navigate = useNavigate();
   const categories = getCategories();
 
@@ -59,11 +62,17 @@ export default function UploadPage() {
     maxSize: MAX_FILE_SIZE,
     onDrop: (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
-      
+      setAutoSuggestions(null); // Clear previous suggestions
+
       // If file is dropped, automatically set the title to the file name without extension
       if (acceptedFiles.length === 1) {
         const fileName = acceptedFiles[0].name.split('.').slice(0, -1).join('.');
         form.setValue('title', fileName);
+
+        // Auto-generate suggestions for images
+        if (acceptedFiles[0].type.startsWith('image/')) {
+          generateAutoSuggestions(acceptedFiles[0]);
+        }
       }
     },
     onDropRejected: (rejectedFiles) => {
@@ -159,8 +168,56 @@ export default function UploadPage() {
     }
   };
 
+  const generateAutoSuggestions = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    setIsGeneratingSuggestions(true);
+
+    try {
+      const suggestions = await apiService.getAutoSuggestions(file);
+      setAutoSuggestions(suggestions);
+
+      toast.success('AI Suggestions Ready! ✨', {
+        description: 'Click the suggestions below to auto-fill your form',
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Failed to generate suggestions:', error);
+      toast.info('Basic suggestions generated', {
+        description: 'AI analysis unavailable, showing basic file information',
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
+  };
+
+  const applySuggestions = () => {
+    if (!autoSuggestions) return;
+
+    // Auto-fill form fields with suggestions
+    if (autoSuggestions.description) {
+      form.setValue('description', autoSuggestions.description);
+    }
+
+    if (autoSuggestions.category) {
+      form.setValue('category', autoSuggestions.category);
+    }
+
+    if (autoSuggestions.tags && autoSuggestions.tags.length > 0) {
+      form.setValue('tags', autoSuggestions.tags.join(', '));
+    }
+
+    toast.success('Suggestions Applied! 🎉', {
+      description: 'Form fields have been auto-filled with AI suggestions',
+    });
+  };
+
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setAutoSuggestions(null); // Clear suggestions when file is removed
   };
 
   const getFileTypeIcon = (file: File) => {
@@ -218,33 +275,121 @@ export default function UploadPage() {
               </div>
               
               {files.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Selected Files ({files.length})</h3>
-                  <div className="border rounded-md divide-y">
-                    {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-3">
-                          {getFileTypeIcon(file)}
-                          <div>
-                            <p className="text-sm font-medium line-clamp-1">{file.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(file.size)}
-                            </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Selected Files ({files.length})</h3>
+                    <div className="border rounded-md divide-y">
+                      {files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3">
+                          <div className="flex items-center gap-3">
+                            {getFileTypeIcon(file)}
+                            <div>
+                              <p className="text-sm font-medium line-clamp-1">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatFileSize(file.size)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {file.type.startsWith('image/') && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => generateAutoSuggestions(file)}
+                                disabled={isGeneratingSuggestions || isUploading}
+                              >
+                                {isGeneratingSuggestions ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Sparkles className="h-4 w-4" />
+                                )}
+                                {isGeneratingSuggestions ? 'Analyzing...' : 'AI Suggest'}
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeFile(index)}
+                              disabled={isUploading}
+                            >
+                              <X className="h-4 w-4" />
+                              <span className="sr-only">Remove file</span>
+                            </Button>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* AI Suggestions Panel */}
+                  {autoSuggestions && (
+                    <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-emerald-600" />
+                          AI Suggestions
+                          <Badge variant="secondary" className="text-xs">
+                            {Math.round(autoSuggestions.confidence * 100)}% confidence
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {autoSuggestions.description && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">Description</p>
+                            <p className="text-sm">{autoSuggestions.description}</p>
+                          </div>
+                        )}
+
+                        {autoSuggestions.category && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">Category</p>
+                            <Badge variant="outline" className="text-xs">{autoSuggestions.category}</Badge>
+                          </div>
+                        )}
+
+                        {autoSuggestions.tags && autoSuggestions.tags.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">Tags</p>
+                            <div className="flex flex-wrap gap-1">
+                              {autoSuggestions.tags.slice(0, 8).map((tag, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">{tag}</Badge>
+                              ))}
+                              {autoSuggestions.tags.length > 8 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{autoSuggestions.tags.length - 8} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {autoSuggestions.detectedObjects && autoSuggestions.detectedObjects.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">Detected Objects</p>
+                            <div className="flex flex-wrap gap-1">
+                              {autoSuggestions.detectedObjects.slice(0, 6).map((object, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">{object}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFile(index)}
-                          disabled={isUploading}
+                          onClick={applySuggestions}
+                          className="w-full mt-3"
+                          variant="default"
+                          size="sm"
                         >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Remove file</span>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Apply All Suggestions
                         </Button>
-                      </div>
-                    ))}
-                  </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
               

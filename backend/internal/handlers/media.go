@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"mediaVault-backend/internal/middleware"
 	"mediaVault-backend/internal/models"
@@ -13,14 +15,16 @@ import (
 )
 
 type MediaHandler struct {
-	dbService    *services.DatabaseService
-	minioService *services.MinioService
+	dbService           *services.DatabaseService
+	minioService        *services.MinioService
+	imageAnalysisService *services.ImageAnalysisService
 }
 
-func NewMediaHandler(dbService *services.DatabaseService, minioService *services.MinioService) *MediaHandler {
+func NewMediaHandler(dbService *services.DatabaseService, minioService *services.MinioService, imageAnalysisService *services.ImageAnalysisService) *MediaHandler {
 	return &MediaHandler{
-		dbService:    dbService,
-		minioService: minioService,
+		dbService:           dbService,
+		minioService:        minioService,
+		imageAnalysisService: imageAnalysisService,
 	}
 }
 
@@ -352,4 +356,168 @@ func (h *MediaHandler) HealthCheck(c *gin.Context) {
 		"status":  "healthy",
 		"service": "media-vault-backend",
 	})
+}
+
+// GenerateAutoSuggestions analyzes an image and returns auto-generated tags and description
+func (h *MediaHandler) GenerateAutoSuggestions(c *gin.Context) {
+	// Get current user ID
+	userID, err := middleware.GetUserIDFromContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User authentication required"})
+		return
+	}
+
+	// Parse multipart form
+	err = c.Request.ParseMultipartForm(10 << 20) // 10MB max for analysis
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		return
+	}
+
+	// Get the file from form data
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file provided"})
+		return
+	}
+
+	// Check if it's an image
+	if !strings.HasPrefix(file.Header.Get("Content-Type"), "image/") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only image files are supported for auto-suggestions"})
+		return
+	}
+
+	// Read file content
+	fileContent, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open file"})
+		return
+	}
+	defer fileContent.Close()
+
+	imageData, err := io.ReadAll(fileContent)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file content"})
+		return
+	}
+
+	// If image analysis service is not available, return basic suggestions
+	if h.imageAnalysisService == nil {
+		suggestions := h.generateBasicSuggestions(file.Filename, file.Header.Get("Content-Type"))
+		c.JSON(http.StatusOK, suggestions)
+		return
+	}
+
+	// Analyze the image
+	analysis, err := h.imageAnalysisService.AnalyzeImage(c.Request.Context(), imageData, file.Header.Get("Content-Type"))
+	if err != nil {
+		// Fallback to basic suggestions
+		suggestions := h.generateBasicSuggestions(file.Filename, file.Header.Get("Content-Type"))
+		c.JSON(http.StatusOK, suggestions)
+		return
+	}
+
+	// Generate smart tags
+	smartTags := h.imageAnalysisService.GenerateSmartTags(c.Request.Context(), analysis, userID.Hex(), []string{})
+
+	// Return suggestions
+	suggestions := gin.H{
+		"tags":            smartTags,
+		"description":     analysis.Description,
+		"category":        h.suggestCategoryFromAnalysis(analysis),
+		"detectedObjects": analysis.Objects,
+		"scene":           analysis.Scene,
+		"style":           analysis.Style,
+		"colors":          analysis.Colors,
+		"confidence":      analysis.Confidence,
+	}
+
+	c.JSON(http.StatusOK, suggestions)
+}
+
+// generateBasicSuggestions provides fallback suggestions when AI analysis is unavailable
+func (h *MediaHandler) generateBasicSuggestions(filename, mimeType string) gin.H {
+	tags := []string{"image"}
+	description := "An uploaded image file"
+	category := "photography"
+
+	// Basic suggestions based on file type
+	switch {
+	case strings.Contains(mimeType, "jpeg"), strings.Contains(mimeType, "jpg"):
+		tags = append(tags, "jpeg", "photo")
+		description = "A JPEG photograph"
+	case strings.Contains(mimeType, "png"):
+		tags = append(tags, "png", "graphic")
+		description = "A PNG image file"
+		category = "design"
+	case strings.Contains(mimeType, "gif"):
+		tags = append(tags, "gif", "animation")
+		description = "An animated GIF image"
+		category = "memes"
+	case strings.Contains(mimeType, "webp"):
+		tags = append(tags, "webp", "web")
+		description = "A WebP image file"
+		category = "design"
+	}
+
+	// Suggest based on filename
+	filenameLower := strings.ToLower(filename)
+	if strings.Contains(filenameLower, "screenshot") {
+		tags = append(tags, "screenshot")
+		category = "screenshots"
+		description = "A screenshot image"
+	} else if strings.Contains(filenameLower, "photo") {
+		tags = append(tags, "photograph")
+		category = "photography"
+	}
+
+	return gin.H{
+		"tags":        tags,
+		"description": description,
+		"category":    category,
+		"confidence":  0.6,
+	}
+}
+
+// suggestCategoryFromAnalysis suggests category based on AI analysis
+func (h *MediaHandler) suggestCategoryFromAnalysis(analysis *services.ImageAnalysisResult) string {
+	categoryMappings := map[string][]string{
+		"photography": {"photo", "camera", "portrait", "landscape", "street", "nature"},
+		"artwork":     {"art", "painting", "drawing", "illustration", "sketch", "digital-art"},
+		"design":      {"logo", "design", "graphic", "layout", "ui", "web"},
+		"documents":   {"document", "text", "paper", "scan", "pdf", "certificate"},
+		"screenshots": {"screenshot", "screen", "app", "website", "interface", "software"},
+		"memes":       {"meme", "funny", "humor", "comic", "joke", "viral"},
+		"personal":    {"selfie", "family", "friends", "vacation", "party", "celebration"},
+		"nature":      {"landscape", "tree", "flower", "animal", "sky", "water", "mountain"},
+		"food":        {"food", "meal", "restaurant", "cooking", "recipe", "drink"},
+		"travel":      {"travel", "vacation", "city", "building", "monument", "tourism"},
+	}
+
+	categoryScores := make(map[string]int)
+	allTags := append(analysis.Tags, analysis.Objects...)
+	allTags = append(allTags, analysis.Scene, analysis.Style)
+
+	for _, tag := range allTags {
+		tagLower := strings.ToLower(tag)
+		for category, keywords := range categoryMappings {
+			for _, keyword := range keywords {
+				if strings.Contains(tagLower, keyword) || tagLower == keyword {
+					categoryScores[category]++
+				}
+			}
+		}
+	}
+
+	bestCategory := "photography"
+	bestScore := 0
+
+	for category, score := range categoryScores {
+		if score > bestScore {
+			bestCategory = category
+			bestScore = score
+		}
+	}
+
+	return bestCategory
 }

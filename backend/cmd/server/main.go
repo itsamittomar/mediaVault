@@ -65,8 +65,12 @@ func main() {
 	log.Printf("Initializing AI service with provider: %s", aiProvider)
 	aiFilterService := services.NewAIFilterService(aiProvider, apiKey)
 
+	// Initialize image analysis service
+	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+	imageAnalysisService := services.NewImageAnalysisService(openaiAPIKey)
+
 	// Initialize handlers
-	mediaHandler := handlers.NewMediaHandler(dbService, minioService)
+	mediaHandler := handlers.NewMediaHandler(dbService, minioService, imageAnalysisService)
 	authHandler := handlers.NewAuthHandler(authService, minioService)
 	filterHandler := handlers.NewFilterHandler(dbService.GetDatabase(), filterService, aiFilterService)
 
@@ -107,6 +111,7 @@ func main() {
 			media := protected.Group("/media")
 			{
 				media.POST("/upload", mediaHandler.UploadFile)
+				media.POST("/auto-suggestions", mediaHandler.GenerateAutoSuggestions)
 				media.GET("", mediaHandler.ListFiles)  // Remove the trailing slash
 				media.GET("/", mediaHandler.ListFiles) // Keep both for compatibility
 				media.GET("/:id", mediaHandler.GetFile)
