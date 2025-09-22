@@ -25,11 +25,11 @@ export function Search() {
       onSubmit={handleSearch}
       className="relative w-full max-w-sm sm:max-w-md"
     >
-      <SearchIcon className="absolute left-2 sm:left-2.5 top-2 sm:top-2.5 h-4 w-4 text-muted-foreground" />
+      <SearchIcon className="absolute left-2 sm:left-2.5 top-2 sm:top-2.5 h-4 w-4 text-muted-foreground icon-glow" />
       <Input
         type="search"
         placeholder="Search files..."
-        className="w-full rounded-md pl-7 sm:pl-8 bg-muted/40 text-sm"
+        className="w-full rounded-md pl-7 sm:pl-8 search-cool text-sm focus-cool"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
       />

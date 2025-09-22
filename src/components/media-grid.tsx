@@ -76,7 +76,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {items.map((item) => (
-        <Card key={item.id} className="group overflow-hidden transition-all hover:shadow-md">
+        <Card key={item.id} className="group overflow-hidden media-card card-hover">
           <div className="relative">
             <Link to={`/view/${item.id}`}>
               <AspectRatio ratio={3/2} className="bg-muted">
@@ -84,7 +84,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
                   <img
                     src={getThumbnail(item)}
                     alt={item.title}
-                    className="object-cover w-full h-full rounded-t-md transition-transform group-hover:scale-105"
+                    className="object-cover w-full h-full rounded-t-md transition-transform duration-500 group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full">
@@ -96,15 +96,15 @@ export default function MediaGrid({ items }: MediaGridProps) {
             
             <div className="absolute top-2 right-2 flex gap-1">
               {item.favorite && (
-                <Badge variant="secondary" className="bg-primary/10 backdrop-blur-sm">
-                  <Star className="h-3 w-3 fill-primary text-primary mr-1" />
+                <Badge variant="secondary" className="badge-cool backdrop-blur-sm">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1 icon-glow" />
                   <span className="sr-only">Favorite</span>
                 </Badge>
               )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 backdrop-blur-sm">
+                  <Button variant="secondary" size="icon" className="h-7 w-7 glass hover-glow">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -154,7 +154,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
           
           <CardContent className="p-4">
             <Link to={`/view/${item.id}`} className="hover:underline">
-              <h3 className="font-medium line-clamp-1">{item.title}</h3>
+              <h3 className="font-semibold line-clamp-1 text-gradient-primary">{item.title}</h3>
             </Link>
             <p className="text-xs text-muted-foreground mt-1">
               {formatFileSize(item.size)} • {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
@@ -164,12 +164,12 @@ export default function MediaGrid({ items }: MediaGridProps) {
           <CardFooter className="p-4 pt-0">
             <div className="flex flex-wrap gap-1">
               {item.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
+                <Badge key={tag} variant="outline" className="text-xs hover-glow border-primary/30 hover:border-primary/60">
                   {tag}
                 </Badge>
               ))}
               {item.tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs badge-cool">
                   +{item.tags.length - 3}
                 </Badge>
               )}

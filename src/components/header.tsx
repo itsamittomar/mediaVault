@@ -45,12 +45,12 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full border-b header-glass shadow-cool">
       <div className="container flex h-16 items-center justify-between px-3 sm:px-4">
         <div className="flex items-center gap-2 mr-2 sm:mr-4">
-          <CircleStackIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          <span className="text-lg sm:text-xl font-semibold hidden sm:block">MediaVault</span>
-          <span className="text-base font-semibold sm:hidden">MV</span>
+          <CircleStackIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary icon-glow" />
+          <span className="text-lg sm:text-xl font-bold hidden sm:block text-gradient-primary">MediaVault</span>
+          <span className="text-base font-bold sm:hidden text-gradient-primary">MV</span>
         </div>
         
         <div className="lg:hidden">
@@ -72,9 +72,9 @@ export default function Header({ user }: HeaderProps) {
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4">
-          <Button asChild variant="ghost" size="icon" className="hidden sm:flex">
+          <Button asChild variant="ghost" size="icon" className="hidden sm:flex hover-glow">
             <Link to="/upload">
-              <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Upload className="h-4 w-4 sm:h-5 sm:w-5 icon-glow" />
               <span className="sr-only">Upload media</span>
             </Link>
           </Button>
@@ -84,8 +84,8 @@ export default function Header({ user }: HeaderProps) {
           {currentUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full hover-glow">
+                  <Avatar className="h-8 w-8 avatar-cool">
                     <AvatarImage src={currentUser.avatar || ''} alt={currentUser.username} />
                     <AvatarFallback>{currentUser.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>

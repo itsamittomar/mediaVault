@@ -72,11 +72,11 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="flex flex-col w-64 border-r bg-card min-h-screen">
+    <div className="flex flex-col w-64 border-r sidebar-gradient min-h-screen shadow-cool">
       <div className="flex h-14 items-center border-b px-4">
         <Link to="/" className="flex items-center gap-2">
-          <CircleStackIcon className="h-6 w-6 text-primary" />
-          <span className="text-lg sm:text-xl font-semibold">MediaVault</span>
+          <CircleStackIcon className="h-6 w-6 text-primary icon-glow" />
+          <span className="text-lg sm:text-xl font-bold text-gradient-primary">MediaVault</span>
         </Link>
       </div>
       <ScrollArea className="flex-1 py-4">
@@ -88,9 +88,9 @@ export default function Sidebar() {
                 (pathname === '/dashboard' && route.href.startsWith('/dashboard?')) ? 
                 "secondary" : "ghost"}
               className={cn(
-                "w-full justify-start gap-2",
+                "w-full justify-start gap-2 hover-glow transition-all duration-300",
                 {
-                  "bg-secondary text-secondary-foreground": 
+                  "bg-gradient-to-r from-primary/20 to-chart-1/20 text-primary border-l-4 border-primary shadow-cool": 
                     pathname === route.href || 
                     (pathname === '/dashboard' && route.href.startsWith('/dashboard?')),
                 }
@@ -98,7 +98,7 @@ export default function Sidebar() {
               asChild
             >
               <Link to={route.href}>
-                <route.icon className="h-4 w-4" />
+                <route.icon className="h-4 w-4 icon-glow" />
                 {route.title}
               </Link>
             </Button>
