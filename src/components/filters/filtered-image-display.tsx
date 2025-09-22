@@ -187,23 +187,23 @@ export default function FilteredImageDisplay({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-slide-in-up">
       {/* Main Image Display */}
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden hover-lift">
         {isProcessing ? (
-          <div className="aspect-video bg-muted flex items-center justify-center">
+          <div className="aspect-video bg-gradient-to-br from-muted to-primary/10 flex items-center justify-center">
             <div className="text-center space-y-3">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary spinner-glow" />
               <p className="text-sm text-muted-foreground">{processingMessage}</p>
-              <div className="w-32 h-2 bg-muted-foreground/20 rounded-full mx-auto overflow-hidden">
-                <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+              <div className="w-32 h-2 bg-muted-foreground/20 rounded-full mx-auto overflow-hidden shimmer">
+                <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full animate-pulse progress-glow" style={{ width: '60%' }} />
               </div>
             </div>
           </div>
         ) : (
           <div className="p-4">
             {showComparison && filteredImage ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 animate-scale-in">
                 <div>
                   <h4 className="text-sm font-medium mb-2">Original</h4>
                   {renderImage(originalImage, 'Original image')}
@@ -216,7 +216,7 @@ export default function FilteredImageDisplay({
             ) : (
               <Dialog>
                 <DialogTrigger asChild>
-                  <div className="cursor-zoom-in">
+                  <div className="cursor-zoom-in smooth-transition hover:scale-105">
                     {filteredImage
                       ? renderImage(filteredImage, 'Filtered image', true)
                       : renderImage(originalImage, 'Original image')
@@ -246,6 +246,7 @@ export default function FilteredImageDisplay({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowComparison(!showComparison)}
+                className="smooth-transition hover:scale-105"
               >
                 {showComparison ? (
                   <>
@@ -263,6 +264,7 @@ export default function FilteredImageDisplay({
                 variant="outline"
                 size="sm"
                 onClick={onReset}
+                className="smooth-transition hover:scale-105"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
@@ -278,6 +280,7 @@ export default function FilteredImageDisplay({
                 variant="outline"
                 size="sm"
                 onClick={shareImage}
+                className="smooth-transition hover:scale-105"
               >
                 <Share className="h-4 w-4 mr-2" />
                 Share
@@ -287,9 +290,10 @@ export default function FilteredImageDisplay({
                 size="sm"
                 onClick={downloadImage}
                 disabled={isDownloading}
+                className="smooth-transition hover:scale-105"
               >
                 {isDownloading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin spinner-glow" />
                 ) : (
                   <Download className="h-4 w-4 mr-2" />
                 )}
@@ -299,6 +303,7 @@ export default function FilteredImageDisplay({
                 <Button
                   size="sm"
                   onClick={onSave}
+                  className="btn-primary smooth-transition hover:scale-105"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save to Library
@@ -311,16 +316,16 @@ export default function FilteredImageDisplay({
 
       {/* Filter Info */}
       {appliedFilter && !isProcessing && (
-        <Card className="p-3">
+        <Card className="p-3 animate-scale-in gradient-border">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium">{appliedFilter.name}</h4>
+              <h4 className="text-sm font-medium gradient-text">{appliedFilter.name}</h4>
               <p className="text-xs text-muted-foreground capitalize">
                 {appliedFilter.category} filter
               </p>
             </div>
             {appliedFilter.confidence && (
-              <Badge variant={appliedFilter.confidence > 0.8 ? 'default' : 'secondary'}>
+              <Badge variant={appliedFilter.confidence > 0.8 ? 'default' : 'secondary'} className="badge-glow animate-pulse">
                 {Math.round(appliedFilter.confidence * 100)}% confidence
               </Badge>
             )}

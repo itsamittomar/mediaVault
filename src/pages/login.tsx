@@ -51,9 +51,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-in-up">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Welcome back</h1>
+        <h1 className="text-3xl font-bold gradient-text">Welcome back</h1>
         <p className="text-muted-foreground">Enter your credentials to access your account</p>
       </div>
       <Form {...form}>
@@ -69,6 +69,7 @@ export default function LoginPage() {
                     placeholder="you@example.com"
                     type="email"
                     autoComplete="email"
+                    className="search-input focus-ring"
                     {...field}
                   />
                 </FormControl>
@@ -95,6 +96,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     type="password"
                     autoComplete="current-password"
+                    className="search-input focus-ring"
                     {...field}
                   />
                 </FormControl>
@@ -102,7 +104,7 @@ export default function LoginPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full btn-primary smooth-transition hover:scale-105" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
@@ -110,7 +112,7 @@ export default function LoginPage() {
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary underline-offset-4 hover:underline">
+          <Link to="/register" className="text-primary underline-offset-4 hover:underline smooth-transition hover:text-accent">
             Sign up
           </Link>
         </p>
@@ -125,14 +127,14 @@ export default function LoginPage() {
           </span>
         </div>
       </div>
-      <div className="grid gap-2 text-sm text-muted-foreground">
+      <div className="grid gap-2 text-sm text-muted-foreground animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
         <div className="flex justify-between">
           <span>User:</span>
-          <span className="font-mono">user@example.com / password</span>
+          <span className="font-mono bg-muted/50 px-2 py-1 rounded">user@example.com / password</span>
         </div>
         <div className="flex justify-between">
           <span>Admin:</span>
-          <span className="font-mono">admin@example.com / password</span>
+          <span className="font-mono bg-muted/50 px-2 py-1 rounded">admin@example.com / password</span>
         </div>
       </div>
     </div>

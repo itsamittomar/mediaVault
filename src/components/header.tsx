@@ -45,18 +45,18 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full border-b header-glass animate-slide-in-up">
       <div className="container flex h-16 items-center justify-between px-3 sm:px-4">
-        <div className="flex items-center gap-2 mr-2 sm:mr-4">
-          <CircleStackIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          <span className="text-lg sm:text-xl font-semibold hidden sm:block">MediaVault</span>
-          <span className="text-base font-semibold sm:hidden">MV</span>
+        <div className="flex items-center gap-2 mr-2 sm:mr-4 animate-float">
+          <CircleStackIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse-glow" />
+          <span className="text-lg sm:text-xl font-bold hidden sm:block gradient-text">MediaVault</span>
+          <span className="text-base font-bold sm:hidden gradient-text">MV</span>
         </div>
         
         <div className="lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-2">
+              <Button variant="ghost" size="icon" className="mr-2 smooth-transition hover:scale-110">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
@@ -67,12 +67,12 @@ export default function Header({ user }: HeaderProps) {
           </Sheet>
         </div>
         
-        <div className="flex-1 flex justify-center px-2 sm:px-4">
+        <div className="flex-1 flex justify-center px-2 sm:px-4 animate-slide-in-right">
           <Search />
         </div>
         
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Button asChild variant="ghost" size="icon" className="hidden sm:flex">
+        <div className="flex items-center gap-2 sm:gap-4 animate-slide-in-right">
+          <Button asChild variant="ghost" size="icon" className="hidden sm:flex smooth-transition hover:scale-110 hover:bg-primary/10">
             <Link to="/upload">
               <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="sr-only">Upload media</span>
@@ -84,8 +84,8 @@ export default function Header({ user }: HeaderProps) {
           {currentUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full smooth-transition hover:scale-110">
+                  <Avatar className="h-8 w-8 avatar-glow">
                     <AvatarImage src={currentUser.avatar || ''} alt={currentUser.username} />
                     <AvatarFallback>{currentUser.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>

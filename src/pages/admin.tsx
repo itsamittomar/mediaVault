@@ -138,66 +138,67 @@ export default function AdminPage() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight gradient-text">Admin Dashboard</h1>
+        <div className="h-1 w-40 bg-gradient-to-r from-primary to-accent rounded-full mt-2 mb-4"></div>
         <p className="text-muted-foreground">
           Monitor system metrics and manage users.
         </p>
       </div>
       
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="interactive-card hover-lift animate-scale-in">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Storage Used
             </CardTitle>
-            <HardDrive className="h-4 w-4 text-muted-foreground" />
+            <HardDrive className="h-4 w-4 text-muted-foreground animate-pulse" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatFileSize(totalStorage)}</div>
+          <CardContent className="bg-gradient-to-br from-blue-500/10 to-blue-600/5">
+            <div className="text-2xl font-bold text-blue-600">{formatFileSize(totalStorage)}</div>
             <p className="text-xs text-muted-foreground">
               Across all users
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="interactive-card hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Files
             </CardTitle>
-            <FileDashed className="h-4 w-4 text-muted-foreground" />
+            <FileDashed className="h-4 w-4 text-muted-foreground animate-pulse" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalFiles}</div>
+          <CardContent className="bg-gradient-to-br from-green-500/10 to-green-600/5">
+            <div className="text-2xl font-bold text-green-600">{totalFiles}</div>
             <p className="text-xs text-muted-foreground">
               Media files stored
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="interactive-card hover-lift animate-scale-in" style={{ animationDelay: '0.2s' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Active Users
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground animate-pulse" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeUsers}</div>
+          <CardContent className="bg-gradient-to-br from-purple-500/10 to-purple-600/5">
+            <div className="text-2xl font-bold text-purple-600">{activeUsers}</div>
             <p className="text-xs text-muted-foreground">
               Out of {mockUsers.length} total users
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="interactive-card hover-lift animate-scale-in" style={{ animationDelay: '0.3s' }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               File Types
             </CardTitle>
-            <FileType2 className="h-4 w-4 text-muted-foreground" />
+            <FileType2 className="h-4 w-4 text-muted-foreground animate-pulse" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4</div>
+          <CardContent className="bg-gradient-to-br from-orange-500/10 to-orange-600/5">
+            <div className="text-2xl font-bold text-orange-600">4</div>
             <p className="text-xs text-muted-foreground">
               Supported file formats
             </p>
@@ -205,15 +206,15 @@ export default function AdminPage() {
         </Card>
       </div>
       
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList>
+      <Tabs defaultValue="users" className="space-y-6 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+        <TabsList className="glass">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         
         <TabsContent value="users">
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle>User Management</CardTitle>
               <CardDescription>
@@ -224,7 +225,7 @@ export default function AdminPage() {
                   placeholder="Search users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
+                  className="max-w-sm search-input focus-ring"
                 />
               </div>
             </CardHeader>
@@ -244,10 +245,10 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={user.id} className="table-row-hover">
                         <TableCell>
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8 smooth-transition hover:scale-110">
                               <AvatarFallback className="text-xs">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
@@ -257,12 +258,12 @@ export default function AdminPage() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          <Badge variant={user.role === 'admin' ? "default" : "outline"} className="text-xs">
+                          <Badge variant={user.role === 'admin' ? "default" : "outline"} className="text-xs smooth-transition hover:scale-105">
                             {user.role}
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <Badge variant={user.status === 'active' ? "success" : "secondary"} className={user.status === 'active' ? "bg-green-500/10 text-green-700 dark:text-green-400 text-xs" : "text-xs"}>
+                          <Badge variant={user.status === 'active' ? "success" : "secondary"} className={user.status === 'active' ? "bg-green-500/10 text-green-700 dark:text-green-400 text-xs badge-glow" : "text-xs smooth-transition hover:scale-105"}>
                             {user.status}
                           </Badge>
                         </TableCell>
@@ -270,7 +271,7 @@ export default function AdminPage() {
                         <TableCell className="hidden sm:table-cell text-sm">{user.filesCount}</TableCell>
                         <TableCell className="hidden lg:table-cell text-sm">{format(new Date(user.lastActive), 'PP')}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" className="text-xs">Edit</Button>
+                          <Button variant="ghost" size="sm" className="text-xs smooth-transition hover:scale-105 hover:bg-primary/10">Edit</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -282,7 +283,7 @@ export default function AdminPage() {
         </TabsContent>
         
         <TabsContent value="files">
-          <Card>
+          <Card className="hover-lift">
             <CardHeader>
               <CardTitle>File Management</CardTitle>
               <CardDescription>
@@ -304,12 +305,12 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {mediaItems.slice(0, 6).map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow key={item.id} className="table-row-hover">
                         <TableCell>
                           <div className="font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">{item.title}</div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          <Badge variant="outline" className="capitalize text-xs">
+                          <Badge variant="outline" className="capitalize text-xs smooth-transition hover:scale-105">
                             {item.type}
                           </Badge>
                         </TableCell>
@@ -319,7 +320,7 @@ export default function AdminPage() {
                         <TableCell className="hidden lg:table-cell text-sm">{formatFileSize(item.size)}</TableCell>
                         <TableCell className="hidden lg:table-cell text-sm">{format(new Date(item.createdAt), 'PP')}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" className="text-xs">View</Button>
+                          <Button variant="ghost" size="sm" className="text-xs smooth-transition hover:scale-105 hover:bg-primary/10">View</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -331,10 +332,13 @@ export default function AdminPage() {
         </TabsContent>
         
         <TabsContent value="analytics">
-          <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
-            <Card>
+          <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 stagger-animation">
+            <Card className="hover-lift">
               <CardHeader>
-                <CardTitle>Storage Distribution</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 animate-pulse" />
+                  Storage Distribution
+                </CardTitle>
                 <CardDescription>
                   Storage used by file type
                 </CardDescription>
@@ -364,9 +368,12 @@ export default function AdminPage() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="hover-lift">
               <CardHeader>
-                <CardTitle>Weekly Activity</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <ActivitySquare className="h-5 w-5 animate-pulse" />
+                  Weekly Activity
+                </CardTitle>
                 <CardDescription>
                   Upload and download trends
                 </CardDescription>

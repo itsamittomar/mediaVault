@@ -147,16 +147,16 @@ export default function FilterPanel({
   const moodFilters = filterPresets.filter(f => f.category === 'mood');
 
   return (
-    <Card className="w-80 h-full">
+    <Card className="w-80 h-full glass animate-slide-in-right">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
+          <Sparkles className="h-5 w-5 animate-pulse" />
           Smart Filters
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mx-2">
+          <TabsList className="grid w-full grid-cols-4 mx-2 glass">
             <TabsTrigger value="suggestions" className="text-xs">
               <Brain className="h-3 w-3" />
             </TabsTrigger>
@@ -172,7 +172,7 @@ export default function FilterPanel({
           </TabsList>
 
           <TabsContent value="suggestions" className="px-2 mt-2">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[400px] custom-scrollbar">
               <div className="space-y-2">
                 <h4 className="text-sm font-medium mb-2">AI Suggestions</h4>
                 {suggestions.length === 0 ? (
@@ -181,7 +181,7 @@ export default function FilterPanel({
                   suggestions.map((suggestion) => (
                     <div
                       key={suggestion.filterId}
-                      className="p-2 rounded-lg border hover:bg-muted cursor-pointer"
+                      className="p-2 rounded-lg border cursor-pointer filter-preset smooth-transition"
                       onClick={() => handlePresetClick(suggestion.filter)}
                     >
                       <div className="flex justify-between items-start mb-1">
@@ -196,7 +196,7 @@ export default function FilterPanel({
                       <p className="text-xs text-muted-foreground mb-1">
                         {suggestion.filter.description}
                       </p>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs smooth-transition hover:scale-105">
                         {suggestion.reason.replace('_', ' ')}
                       </Badge>
                     </div>
@@ -207,12 +207,12 @@ export default function FilterPanel({
           </TabsContent>
 
           <TabsContent value="presets" className="px-2 mt-2">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[400px] custom-scrollbar">
               <div className="space-y-4">
                 {/* Artistic Filters */}
                 <div>
                   <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Palette className="h-4 w-4" />
+                    <Palette className="h-4 w-4 animate-pulse" />
                     Artistic
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -220,11 +220,11 @@ export default function FilterPanel({
                       <div
                         key={preset.id}
                         className={`p-2 rounded-lg border cursor-pointer transition-colors ${
-                          selectedFilter?.id === preset.id ? 'border-primary bg-primary/10' : 'hover:bg-muted'
-                        }`}
+                          selectedFilter?.id === preset.id ? 'border-primary bg-gradient-to-br from-primary/20 to-accent/10 neon-glow' : 'filter-preset'
+                        } smooth-transition`}
                         onClick={() => handlePresetClick(preset)}
                       >
-                        <div className="text-sm font-medium truncate">{preset.name}</div>
+                        <div className="text-sm font-medium truncate gradient-text">{preset.name}</div>
                         <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {preset.description}
                         </div>
@@ -238,7 +238,7 @@ export default function FilterPanel({
                 {/* Mood Filters */}
                 <div>
                   <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <Heart className="h-4 w-4" />
+                    <Heart className="h-4 w-4 animate-pulse" />
                     Mood
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -246,11 +246,11 @@ export default function FilterPanel({
                       <div
                         key={preset.id}
                         className={`p-2 rounded-lg border cursor-pointer transition-colors ${
-                          selectedFilter?.id === preset.id ? 'border-primary bg-primary/10' : 'hover:bg-muted'
-                        }`}
+                          selectedFilter?.id === preset.id ? 'border-primary bg-gradient-to-br from-primary/20 to-accent/10 neon-glow' : 'filter-preset'
+                        } smooth-transition`}
                         onClick={() => handlePresetClick(preset)}
                       >
-                        <div className="text-sm font-medium truncate">{preset.name}</div>
+                        <div className="text-sm font-medium truncate gradient-text">{preset.name}</div>
                         <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {preset.description}
                         </div>
@@ -263,10 +263,10 @@ export default function FilterPanel({
           </TabsContent>
 
           <TabsContent value="ai" className="px-2 mt-2">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[400px] custom-scrollbar">
               <div className="space-y-4">
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
+                  <Zap className="h-4 w-4 animate-pulse" />
                   AI-Powered
                 </h4>
 
@@ -279,7 +279,7 @@ export default function FilterPanel({
                         key={style}
                         variant="outline"
                         size="sm"
-                        className="h-auto p-2"
+                        className="h-auto p-2 smooth-transition hover:scale-105 hover:bg-primary/10"
                         onClick={() => onAIStyleTransfer(style, 0.8)}
                         disabled={isProcessing}
                       >
@@ -304,7 +304,7 @@ export default function FilterPanel({
                         key={mood}
                         variant="outline"
                         size="sm"
-                        className="h-auto p-2"
+                        className="h-auto p-2 smooth-transition hover:scale-105 hover:bg-primary/10"
                         onClick={() => onMoodEnhancement(mood, 0.7, 'warm')}
                         disabled={isProcessing}
                       >
@@ -318,7 +318,7 @@ export default function FilterPanel({
 
                 {isProcessing && (
                   <div className="text-center p-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2 spinner-glow"></div>
                     <p className="text-sm text-muted-foreground">Processing with AI...</p>
                   </div>
                 )}
@@ -327,7 +327,7 @@ export default function FilterPanel({
           </TabsContent>
 
           <TabsContent value="custom" className="px-2 mt-2">
-            <ScrollArea className="h-[400px]">
+            <ScrollArea className="h-[400px] custom-scrollbar">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium">Custom Adjustments</h4>
@@ -336,6 +336,7 @@ export default function FilterPanel({
                     size="sm"
                     onClick={resetCustomConfig}
                     disabled={!selectedFilter}
+                    className="smooth-transition hover:scale-110"
                   >
                     <RotateCcw className="h-3 w-3" />
                   </Button>
@@ -423,7 +424,7 @@ export default function FilterPanel({
                     <div className="pt-4">
                       <Button
                         onClick={handleApplyFilter}
-                        className="w-full"
+                        className="w-full btn-primary smooth-transition hover:scale-105"
                         disabled={isProcessing}
                       >
                         <Download className="h-4 w-4 mr-2" />

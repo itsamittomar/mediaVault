@@ -74,20 +74,20 @@ export default function MediaGrid({ items }: MediaGridProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 stagger-animation">
       {items.map((item) => (
-        <Card key={item.id} className="group overflow-hidden transition-all hover:shadow-md">
+        <Card key={item.id} className="group overflow-hidden media-card hover-lift interactive-card animate-scale-in">
           <div className="relative">
             <Link to={`/view/${item.id}`}>
-              <AspectRatio ratio={3/2} className="bg-muted">
+              <AspectRatio ratio={3/2} className="bg-gradient-to-br from-muted to-muted/50">
                 {getThumbnail(item) ? (
                   <img
                     src={getThumbnail(item)}
                     alt={item.title}
-                    className="object-cover w-full h-full rounded-t-md transition-transform group-hover:scale-105"
+                    className="object-cover w-full h-full rounded-t-md transition-all duration-500 group-hover:scale-110 group-hover:brightness-110"
                   />
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full">
+                  <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/10 to-accent/10">
                     {getFileIcon(item.type)}
                   </div>
                 )}
@@ -96,7 +96,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
             
             <div className="absolute top-2 right-2 flex gap-1">
               {item.favorite && (
-                <Badge variant="secondary" className="bg-primary/10 backdrop-blur-sm">
+                <Badge variant="secondary" className="bg-primary/20 backdrop-blur-sm border border-primary/30 badge-glow animate-pulse-glow">
                   <Star className="h-3 w-3 fill-primary text-primary mr-1" />
                   <span className="sr-only">Favorite</span>
                 </Badge>
@@ -104,7 +104,7 @@ export default function MediaGrid({ items }: MediaGridProps) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 backdrop-blur-sm">
+                  <Button variant="secondary" size="icon" className="h-7 w-7 glass smooth-transition hover:scale-110">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -152,24 +152,24 @@ export default function MediaGrid({ items }: MediaGridProps) {
             </div>
           </div>
           
-          <CardContent className="p-4">
+          <CardContent className="p-4 bg-gradient-to-b from-card to-muted/20">
             <Link to={`/view/${item.id}`} className="hover:underline">
-              <h3 className="font-medium line-clamp-1">{item.title}</h3>
+              <h3 className="font-semibold line-clamp-1 gradient-text">{item.title}</h3>
             </Link>
             <p className="text-xs text-muted-foreground mt-1">
               {formatFileSize(item.size)} • {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
             </p>
           </CardContent>
           
-          <CardFooter className="p-4 pt-0">
+          <CardFooter className="p-4 pt-0 bg-gradient-to-t from-muted/30 to-transparent">
             <div className="flex flex-wrap gap-1">
               {item.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
+                <Badge key={tag} variant="outline" className="text-xs smooth-transition hover:scale-105 hover:bg-primary/10">
                   {tag}
                 </Badge>
               ))}
               {item.tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs smooth-transition hover:scale-105">
                   +{item.tags.length - 3}
                 </Badge>
               )}

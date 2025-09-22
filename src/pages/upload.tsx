@@ -254,14 +254,14 @@ export default function UploadPage() {
               <div 
                 {...getRootProps()} 
                 className={cn(
-                  "border-2 border-dashed rounded-lg p-6 transition-colors text-center cursor-pointer",
-                  isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50",
+                  "upload-zone rounded-lg p-8 text-center cursor-pointer",
+                  isDragActive ? "drag-active" : "",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 )}
               >
                 <input {...getInputProps()} />
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <Upload className={cn("h-10 w-10 mb-2", isDragActive ? "text-primary" : "text-muted-foreground")} />
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Upload className={cn("h-12 w-12 mb-3 smooth-transition", isDragActive ? "text-primary animate-bounce" : "text-muted-foreground animate-float")} />
                   <h3 className="font-medium">
                     {isDragActive ? 'Drop your files here' : 'Drag & drop your files here'}
                   </h3>
@@ -271,16 +271,22 @@ export default function UploadPage() {
                   <p className="text-xs text-muted-foreground mt-1">
                     Supported formats: Images, Videos, Audio, Documents
                   </p>
+                  {isDragActive && (
+                    <div className="mt-4 w-16 h-1 bg-primary rounded-full animate-pulse"></div>
+                  )}
                 </div>
               </div>
               
               {files.length > 0 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Selected Files ({files.length})</h3>
-                    <div className="border rounded-md divide-y">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <FilePlus className="h-4 w-4 text-primary" />
+                      Selected Files ({files.length})
+                    </h3>
+                    <div className="border rounded-md divide-y bg-gradient-to-b from-card to-muted/10">
                       {files.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3">
+                        <div key={index} className="flex items-center justify-between p-3 smooth-transition hover:bg-primary/5 animate-slide-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
                           <div className="flex items-center gap-3">
                             {getFileTypeIcon(file)}
                             <div>
@@ -294,15 +300,16 @@ export default function UploadPage() {
                             {file.type.startsWith('image/') && (
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant="outline" 
                                 size="sm"
                                 onClick={() => generateAutoSuggestions(file)}
                                 disabled={isGeneratingSuggestions || isUploading}
+                                className="smooth-transition hover:scale-105 hover:bg-primary/10"
                               >
                                 {isGeneratingSuggestions ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <Loader2 className="h-4 w-4 animate-spin spinner-glow" />
                                 ) : (
-                                  <Sparkles className="h-4 w-4" />
+                                  <Sparkles className="h-4 w-4 animate-pulse" />
                                 )}
                                 {isGeneratingSuggestions ? 'Analyzing...' : 'AI Suggest'}
                               </Button>
@@ -313,6 +320,7 @@ export default function UploadPage() {
                               size="icon"
                               onClick={() => removeFile(index)}
                               disabled={isUploading}
+                              className="smooth-transition hover:scale-110 hover:text-destructive"
                             >
                               <X className="h-4 w-4" />
                               <span className="sr-only">Remove file</span>
@@ -325,12 +333,12 @@ export default function UploadPage() {
 
                   {/* AI Suggestions Panel */}
                   {autoSuggestions && (
-                    <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20">
+                    <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20 animate-scale-in gradient-border">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-emerald-600" />
+                          <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse" />
                           AI Suggestions
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-xs badge-glow">
                             {Math.round(autoSuggestions.confidence * 100)}% confidence
                           </Badge>
                         </CardTitle>
@@ -380,7 +388,7 @@ export default function UploadPage() {
                         <Button
                           type="button"
                           onClick={applySuggestions}
-                          className="w-full mt-3"
+                          className="w-full mt-3 btn-primary smooth-transition hover:scale-105"
                           variant="default"
                           size="sm"
                         >
@@ -473,18 +481,18 @@ export default function UploadPage() {
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Uploading...</span>
+                    <span className="loading-dots">Uploading</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <Progress value={uploadProgress} />
+                  <Progress value={uploadProgress} className="progress-glow" />
                 </div>
               )}
               
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" disabled={isUploading}>
+                <Button type="button" variant="outline" disabled={isUploading} className="smooth-transition hover:scale-105">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isUploading || files.length === 0}>
+                <Button type="submit" disabled={isUploading || files.length === 0} className="btn-primary smooth-transition hover:scale-105">
                   {isUploading ? 'Uploading...' : 'Upload'}
                 </Button>
               </div>

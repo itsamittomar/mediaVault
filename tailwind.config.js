@@ -77,6 +77,20 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'float': 'float 3s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        'gradient-shift': 'gradient-shift 4s ease infinite',
+        'slide-in-up': 'slide-in-up 0.5s ease-out',
+        'slide-in-right': 'slide-in-right 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'shimmer': 'shimmer 1.5s infinite',
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },

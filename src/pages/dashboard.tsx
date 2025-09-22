@@ -114,11 +114,14 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{getPageTitle()}</h1>
+        <div className="animate-slide-in-up">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight gradient-text">{getPageTitle()}</h1>
+          <div className="h-1 w-20 bg-gradient-to-r from-primary to-accent rounded-full mt-2"></div>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 animate-slide-in-right">
           <Select
             value={sortBy}
             onValueChange={(value) => {
@@ -147,6 +150,7 @@ export default function DashboardPage() {
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setViewMode('grid')}
+              className="smooth-transition hover:scale-110"
             >
               <Grid className="h-4 w-4" />
               <span className="sr-only">Grid view</span>
@@ -155,6 +159,7 @@ export default function DashboardPage() {
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="icon"
               onClick={() => setViewMode('list')}
+              className="smooth-transition hover:scale-110"
             >
               <List className="h-4 w-4" />
               <span className="sr-only">List view</span>
@@ -166,35 +171,35 @@ export default function DashboardPage() {
       {/* Search Form */}
       <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 smooth-transition" />
           <Input
             type="text"
             placeholder="Search files..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10 text-sm"
+            className="pl-10 text-sm search-input focus-ring"
           />
           {searchInput && (
             <button
               type="button"
               onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground smooth-transition hover:scale-110"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
-        <Button type="submit" variant="default" className="w-full sm:w-auto">
+        <Button type="submit" variant="default" className="w-full sm:w-auto btn-primary smooth-transition hover:scale-105">
           Search
         </Button>
       </form>
       
       {searchQuery && (
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="px-3 py-1 text-sm">
+          <Badge variant="secondary" className="px-3 py-1 text-sm animate-scale-in badge-glow">
             Search: {searchQuery}
             <button
-              className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full"
+              className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full smooth-transition hover:scale-125"
               onClick={handleClearSearch}
             >
               ×
@@ -203,7 +208,7 @@ export default function DashboardPage() {
         </div>
       )}
       
-      <Card>
+      <Card className="animate-slide-in-up hover-lift" style={{ animationDelay: '0.5s' }}>
         <CardContent className="p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">

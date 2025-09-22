@@ -137,15 +137,16 @@ export default function FiltersPage() {
       </Helmet>
 
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Smart Filters</h1>
+        <div className="mb-6 animate-slide-in-up">
+          <h1 className="text-3xl font-bold mb-2 gradient-text">Smart Filters</h1>
+          <div className="h-1 w-32 bg-gradient-to-r from-primary to-accent rounded-full mb-4"></div>
           <p className="text-muted-foreground">
             Experience AI-powered image enhancement with artistic filters, mood adjustments, and style transfers
           </p>
         </div>
 
         <Tabs value={activeView} onValueChange={(value) => setActiveView(value as 'demo' | 'analytics')} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px] glass animate-scale-in">
             <TabsTrigger value="demo" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               Filter Demo
@@ -158,12 +159,13 @@ export default function FiltersPage() {
 
           <TabsContent value="demo" className="space-y-6">
             {selectedImage ? (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-slide-in-up">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <Button
                       variant="outline"
                       onClick={() => setSelectedImage(null)}
+                      className="smooth-transition hover:scale-105"
                     >
                       ← Back to Gallery
                     </Button>
@@ -172,30 +174,30 @@ export default function FiltersPage() {
                       <p className="text-sm text-muted-foreground">{selectedImage.description}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="flex items-center gap-1">
+                  <Badge variant="secondary" className="flex items-center gap-1 badge-glow animate-pulse">
                     <ImageIcon className="h-3 w-3" />
                     Demo Mode
                   </Badge>
                 </div>
 
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-lg overflow-hidden hover-lift animate-scale-in">
                   <EnhancedMediaViewer media={selectedImage} />
                 </div>
               </div>
             ) : (
               <div className="space-y-6">
-                <Card>
+                <Card className="hover-lift animate-slide-in-up">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Palette className="h-5 w-5" />
+                        <Palette className="h-5 w-5 animate-pulse" />
                         Smart Filters Gallery
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 smooth-transition hover:scale-105 hover:bg-primary/10"
                       >
                         <Upload className="h-4 w-4" />
                         Upload Image
@@ -219,14 +221,14 @@ export default function FiltersPage() {
                     <div
                       className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                         isDragging
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted-foreground/25 hover:border-primary/50'
-                      }`}
+                          ? 'border-primary bg-gradient-to-br from-primary/10 to-accent/5 scale-105'
+                          : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5'
+                      } upload-zone smooth-transition`}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                     >
-                      <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <Upload className={`h-12 w-12 mx-auto mb-4 smooth-transition ${isDragging ? 'text-primary animate-bounce' : 'text-muted-foreground animate-float'}`} />
                       <h3 className="text-lg font-semibold mb-2">
                         {isDragging ? 'Drop your images here' : 'Drag & Drop Images'}
                       </h3>
@@ -236,7 +238,7 @@ export default function FiltersPage() {
                       <Button
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 smooth-transition hover:scale-105"
                       >
                         <Plus className="h-4 w-4" />
                         Choose Files
@@ -246,14 +248,14 @@ export default function FiltersPage() {
                     {uploadedImages.length > 0 && (
                       <div className="mb-6">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
-                          <Upload className="h-4 w-4" />
+                          <Upload className="h-4 w-4 animate-pulse" />
                           Your Uploaded Images ({uploadedImages.length})
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-animation">
                           {uploadedImages.map((image) => (
                             <Card
                               key={image.id}
-                              className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-primary/20"
+                              className="cursor-pointer media-card hover-lift border-2 border-primary/20 interactive-card"
                               onClick={() => setSelectedImage(image)}
                             >
                               <div className="aspect-video relative overflow-hidden rounded-t-lg">
@@ -262,7 +264,7 @@ export default function FiltersPage() {
                                   alt={image.title}
                                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                                 />
-                                <Badge className="absolute top-2 right-2 bg-primary">
+                                <Badge className="absolute top-2 right-2 bg-primary badge-glow animate-pulse">
                                   Custom
                                 </Badge>
                               </div>
@@ -273,7 +275,7 @@ export default function FiltersPage() {
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                   {image.tags?.map((tag) => (
-                                    <Badge key={tag} variant="outline" className="text-xs">
+                                    <Badge key={tag} variant="outline" className="text-xs smooth-transition hover:scale-105">
                                       {tag}
                                     </Badge>
                                   ))}
@@ -287,15 +289,15 @@ export default function FiltersPage() {
 
                     <div className="mb-4">
                       <h4 className="font-medium mb-3 flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4" />
+                        <ImageIcon className="h-4 w-4 animate-pulse" />
                         Demo Images
                       </h4>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-animation">
                       {DEMO_IMAGES.map((image) => (
                         <Card
                           key={image.id}
-                          className="cursor-pointer hover:shadow-lg transition-shadow"
+                          className="cursor-pointer media-card hover-lift interactive-card"
                           onClick={() => setSelectedImage(image)}
                         >
                           <div className="aspect-video relative overflow-hidden rounded-t-lg">
@@ -310,7 +312,7 @@ export default function FiltersPage() {
                             <p className="text-sm text-muted-foreground mb-2">{image.description}</p>
                             <div className="flex flex-wrap gap-1">
                               {image.tags?.map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
+                                <Badge key={tag} variant="outline" className="text-xs smooth-transition hover:scale-105">
                                   {tag}
                                 </Badge>
                               ))}
@@ -322,15 +324,18 @@ export default function FiltersPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="hover-lift animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
                   <CardHeader>
-                    <CardTitle>Available Filter Types</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 animate-pulse" />
+                      Available Filter Types
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <Palette className="h-4 w-4" />
+                          <Palette className="h-4 w-4 animate-pulse" />
                           Artistic Filters
                         </h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
@@ -346,7 +351,7 @@ export default function FiltersPage() {
 
                       <div>
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <Sparkles className="h-4 w-4" />
+                          <Sparkles className="h-4 w-4 animate-pulse" />
                           Mood Enhancements
                         </h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
@@ -367,10 +372,10 @@ export default function FiltersPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <Card>
+            <Card className="hover-lift animate-slide-in-up">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                  <BarChart3 className="h-5 w-5 animate-pulse" />
                   Filter Usage Analytics
                 </CardTitle>
               </CardHeader>

@@ -53,9 +53,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-in-up">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Create an account</h1>
+        <h1 className="text-3xl font-bold gradient-text">Create an account</h1>
         <p className="text-muted-foreground">Enter your information to get started</p>
       </div>
       <Form {...form}>
@@ -70,6 +70,7 @@ export default function RegisterPage() {
                   <Input
                     placeholder="johndoe"
                     autoComplete="username"
+                    className="search-input focus-ring"
                     {...field}
                   />
                 </FormControl>
@@ -88,6 +89,7 @@ export default function RegisterPage() {
                     placeholder="you@example.com"
                     type="email"
                     autoComplete="email"
+                    className="search-input focus-ring"
                     {...field}
                   />
                 </FormControl>
@@ -106,6 +108,7 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     type="password"
                     autoComplete="new-password"
+                    className="search-input focus-ring"
                     {...field}
                   />
                 </FormControl>
@@ -113,7 +116,7 @@ export default function RegisterPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full btn-primary smooth-transition hover:scale-105" disabled={isLoading}>
             {isLoading ? 'Creating account...' : 'Create account'}
           </Button>
         </form>
@@ -121,7 +124,7 @@ export default function RegisterPage() {
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+          <Link to="/login" className="text-primary underline-offset-4 hover:underline smooth-transition hover:text-accent">
             Sign in
           </Link>
         </p>

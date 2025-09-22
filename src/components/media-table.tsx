@@ -71,7 +71,7 @@ export default function MediaTable({ items }: MediaTableProps) {
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table className="animate-slide-in-up">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
@@ -84,16 +84,16 @@ export default function MediaTable({ items }: MediaTableProps) {
         </TableHeader>
         <TableBody>
           {items.map((item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id} className="table-row-hover animate-slide-in-up" style={{ animationDelay: `${items.indexOf(item) * 0.05}s` }}>
               <TableCell>
                 <div className="flex items-center gap-2">
                   {getFileIcon(item.type)}
                   <div>
-                    <Link to={`/view/${item.id}`} className="font-medium hover:underline">
+                    <Link to={`/view/${item.id}`} className="font-medium hover:underline smooth-transition hover:text-primary">
                       {item.title}
                     </Link>
                     {item.favorite && (
-                      <Star className="h-3 w-3 fill-primary text-primary inline-block ml-1" />
+                      <Star className="h-3 w-3 fill-primary text-primary inline-block ml-1 animate-pulse" />
                     )}
                     {item.description && (
                       <p className="text-xs text-muted-foreground line-clamp-1">
@@ -104,7 +104,7 @@ export default function MediaTable({ items }: MediaTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="capitalize">
+                <Badge variant="outline" className="capitalize smooth-transition hover:scale-105">
                   {item.type}
                 </Badge>
               </TableCell>
@@ -122,12 +122,12 @@ export default function MediaTable({ items }: MediaTableProps) {
               <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {item.tags.slice(0, 2).map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
+                    <Badge key={tag} variant="outline" className="text-xs smooth-transition hover:scale-105 hover:bg-primary/10">
                       {tag}
                     </Badge>
                   ))}
                   {item.tags.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs smooth-transition hover:scale-105">
                       +{item.tags.length - 2}
                     </Badge>
                   )}
@@ -136,7 +136,7 @@ export default function MediaTable({ items }: MediaTableProps) {
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 smooth-transition hover:scale-110 hover:bg-primary/10">
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">Open menu</span>
                     </Button>

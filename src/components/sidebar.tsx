@@ -72,14 +72,14 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="flex flex-col w-64 border-r bg-card min-h-screen">
-      <div className="flex h-14 items-center border-b px-4">
+    <div className="flex flex-col w-64 border-r bg-gradient-to-b from-card to-muted/20 min-h-screen sidebar-nav">
+      <div className="flex h-14 items-center border-b px-4 bg-gradient-to-r from-primary/5 to-accent/5">
         <Link to="/" className="flex items-center gap-2">
-          <CircleStackIcon className="h-6 w-6 text-primary" />
-          <span className="text-lg sm:text-xl font-semibold">MediaVault</span>
+          <CircleStackIcon className="h-6 w-6 text-primary animate-pulse-glow" />
+          <span className="text-lg sm:text-xl font-bold gradient-text">MediaVault</span>
         </Link>
       </div>
-      <ScrollArea className="flex-1 py-4">
+      <ScrollArea className="flex-1 py-4 custom-scrollbar">
         <nav className="px-2 space-y-1">
           {routes.map((route) => (
             <Button
@@ -88,9 +88,9 @@ export default function Sidebar() {
                 (pathname === '/dashboard' && route.href.startsWith('/dashboard?')) ? 
                 "secondary" : "ghost"}
               className={cn(
-                "w-full justify-start gap-2",
+                "w-full justify-start gap-2 smooth-transition hover:scale-105 hover:translate-x-1",
                 {
-                  "bg-secondary text-secondary-foreground": 
+                  "bg-gradient-to-r from-primary/20 to-accent/20 text-primary border border-primary/30 shadow-lg": 
                     pathname === route.href || 
                     (pathname === '/dashboard' && route.href.startsWith('/dashboard?')),
                 }
@@ -98,7 +98,7 @@ export default function Sidebar() {
               asChild
             >
               <Link to={route.href}>
-                <route.icon className="h-4 w-4" />
+                <route.icon className="h-4 w-4 smooth-transition group-hover:scale-110" />
                 {route.title}
               </Link>
             </Button>
